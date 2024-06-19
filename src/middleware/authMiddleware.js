@@ -1,0 +1,23 @@
+const jwt = require('jsonwebtoken')
+
+function verificarToken() {
+    return function(req, res, next) {
+        const token = req.query.token//req.header('token');/
+        try {
+            const decoded = jwt.verify(token, process.env.SECRET_KEY)
+            next()
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({ error: 'Token expirado.' });
+            } else if (error.name === 'JsonWebTokenError') {
+                return res.status(401).json({ error: 'Token inválido.' });
+            } else {
+                return res.status(401).json({ error: 'Erro na verificação do token.' });
+            }
+        }
+    }
+}
+
+module.exports = {
+    verificarToken
+}
