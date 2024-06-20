@@ -12,13 +12,13 @@ router.get('/register', (req, res) => {
 
 
 router.post('/register', async (req, res) => {
-    const { nome, email, password, confirmPassword, papel } = req.body
-
+    const { nome, email, password, confirmPassword } = req.body
+    const papel = 'usuario'
     //await adicionar função de validação de dados (em próxima versão)
 
     try {
         const { userTemp, token } = await authService.registerUserTemp(nome, email, password, papel)
-        res.status(201).json({ message: "Solicitação enviada com sucesso", userTemp, token })
+        res.status(201).json({ message: "Solicitação enviada com sucesso", token })
     } catch (error) {
         res.status(500).json({ error: "Erro ao cadastrar usuário", message: error.message })
     }
