@@ -77,8 +77,44 @@ class AuthService {
                 console.log("invalido")
                 throw new Error('Email ou senha inválido!')
             }
-            const token = jwt.sign({id: user.id, email: user.email, papel: user.papel}, process.env.SECRET_KEY, {expiresIn: '1h'})
-            return {user, token}
+            const token = jwt.sign({ id: user.id, email: user.email, papel: user.papel }, process.env.SECRET_KEY, { expiresIn: '1h' })
+            return { user, token }
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async verificarUserTemp(email) {
+        try {
+            const userTemp = await TempUserModel.findOne({
+                where: {
+                    email: email
+                }
+            })
+            return userTemp
+        } catch (error) {
+            throw error
+        }
+    }
+    async deletarUserTemp(email) {
+        try {
+            await TempUserModel.destroy({
+                where: {
+                    email: email
+                }
+            })
+        } catch (error) {
+            
+        }
+    }
+    async verificarUser(email) {
+        try {
+            const userTemp = await UserModel.findOne({
+                where: {
+                    email: email
+                }
+            })
+            return userTemp
         } catch (error) {
             throw error
         }
