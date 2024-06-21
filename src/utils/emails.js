@@ -12,7 +12,7 @@ async function sendVerificationEmail(email, token) {
         }
     });
 
-    const verificationUrl = `http://${siteUrl}/verify?token=${token}&email=${email}`;
+    const verificationUrl = `http://${siteUrl}/auth/verify?token=${token}&email=${email}`;
 
     const mailOptions = {
         from: `Agenda Aí <${process.env.EMAIL}>`,
