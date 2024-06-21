@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 
 async function sendVerificationEmail(email, token) {
 
-    const siteUrl = process.env.REMOTE_CLIENTE_URL
+    const siteUrl = 'http://localhost:3000'
 
     const transporter = nodemailer.createTransport({
         service: 'Gmail',
@@ -12,7 +12,7 @@ async function sendVerificationEmail(email, token) {
         }
     });
 
-    const verificationUrl = `http://${siteUrl}/auth/verify?token=${token}&email=${email}`;
+    const verificationUrl = `${siteUrl}/auth/verify?token=${token}&email=${email}`;
 
     const mailOptions = {
         from: `Agenda Aí <${process.env.EMAIL}>`,
