@@ -4,7 +4,7 @@ const router = express.Router()
 const AuthService = require('../services/authService')
 const authService = new AuthService()
 
-const {verificarToken} = require('../middleware/authMiddleware')
+const { verificarToken } = require('../middleware/authMiddleware')
 
 router.get('/register', (req, res) => {
     res.send('Ok')
@@ -13,7 +13,7 @@ router.get('/register', (req, res) => {
 
 router.post('/register', async (req, res) => {
     const { nome, email, password } = req.body
-    const papel = 'usuario'
+    const papel = 'cliente'
 
     try {
         const checkUserTemp = await authService.verificarUserTemp(email)
@@ -22,7 +22,7 @@ router.post('/register', async (req, res) => {
         }
         const checkUser = await authService.verificarUser(email)
         if (checkUser) {
-            return res.status(409).json({error: "Email já cadastrado"})
+            return res.status(409).json({ error: "Email já cadastrado" })
         }
 
         const { userTemp, token } = await authService.registerUserTemp(nome, email, password, papel)
@@ -41,19 +41,29 @@ router.get('/verify', verificarToken(), async (req, res) => {
     }
 })
 
-router.post('/login', async (req, res ) => {
-    const {email, password} = req.body
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body
     try {
-        const {user, token} = await authService.signIn(email, password)
-        res.status(200).json({message: 'Login bem-sucedido',username: user.nome, token})
-        
+        const { user, token } = await authService.signIn(email, password)
+        res.status(200).json({
+            message: 'Login bem-sucedido',
+            username: user.nome,
+            papel: user.papel,
+            token })
+
     } catch (error) {
-        res.status(400).json({error: error.message})
+        if (error.message === 'Usuário não encontrado') {
+            return res.status(404).json({ error: error.message })
+        } else if (error.message === 'Email ou senha inválido!') {
+            return res.status(401).json({ error: error.message })
+        } else {
+            res.status(400).json({ error: error.message })
+        }
     }
 })
 
 router.post('/senha', async (req, res) => {
-    const {email, senhaFornecida} = req.body
+    const { email, senhaFornecida } = req.body
     try {
         const resultado = await authService.verificarSenha(email, senhaFornecida);
         if (resultado) {
