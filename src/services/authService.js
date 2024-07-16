@@ -18,7 +18,9 @@ class AuthService {
             })
             const token = jwt.sign({ id: userTemp.id }, process.env.SECRET_KEY, { expiresIn: '1h' })
 
-            await sendVerificationEmail(email, token)
+            if(papel == 'cliente') {
+                await sendVerificationEmail(email, token)
+            }
 
             return { userTemp, token }
         } catch (error) {
