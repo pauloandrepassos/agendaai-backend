@@ -5,6 +5,7 @@ const AuthService = require('../services/authService')
 const authService = new AuthService()
 const SolicitacaoService = require('../services/solicitacaoService')
 const { sendRegistrationConfirmationEmail } = require('../utils/emails')
+const { verificarToken } = require('../middleware/authMiddleware')
 const solicitacaoService = new SolicitacaoService()
 
 router.get('/solicitacao', async (req, res) => {
@@ -48,6 +49,17 @@ router.post('/solicitacao', async (req, res) => {
         return res.status(201).json({ message: "Solicitação criada com sucesso", solicitacao, token });
     } catch (error) {
         return res.status(500).json({ error: `Erro ao criar solicitação: ${error.message}` });
+    }
+})
+
+router.put('/solicitacao/:id', verificarToken('admin'), async(req, res) => {
+    const { id } = req.params
+
+    try {
+        const solicitacao = await solicitacaoService.verificarSolicitação(id);
+        return res.status(200).json({ message: 'Status atualizado com sucesso', solicitacao });
+    } catch (error) {
+        return res.status(500).json({ error: `Erro ao atualizar status: ${error.message}` });
     }
 })
 

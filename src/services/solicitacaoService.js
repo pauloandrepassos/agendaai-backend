@@ -89,6 +89,21 @@ class SolicitacaoService {
             throw error;
         }
     }
+    async verificarSolicitação(id) {
+        try {
+            const solicitacao = await SolicitacaoModel.findByPk(id)
+            if (!solicitacao) {
+                throw new Error('Solicitação não encontrada');
+            }
+
+            solicitacao.status = "verificado";
+            await solicitacao.save();
+
+            return solicitacao;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = SolicitacaoService
