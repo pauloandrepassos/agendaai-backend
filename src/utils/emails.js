@@ -41,4 +41,25 @@ async function sendRegistrationConfirmationEmail(email) {
     await transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendVerificationEmail, sendRegistrationConfirmationEmail };
+async function sendRegistrationCompletionEmail(email, token) {
+    const siteUrl = 'http://localhost:3000';
+    const transporter = createTransporter();
+
+    const verificationUrl = `${siteUrl}/finalizar-cadastro?token=${token}&email=${email}`;
+
+    const mailOptions = {
+        from: `Agenda Aí <${process.env.EMAIL}>`,
+        to: email,
+        subject: 'Finalização de Cadastro de Lanchonete',
+        text: `Clique no link para finalizar o cadastro de sua lanchonete: ${verificationUrl}`,
+        html: `<a href="${verificationUrl}">${verificationUrl}</a>`
+    };
+
+    await transporter.sendMail(mailOptions)
+}
+
+module.exports = {
+    sendVerificationEmail,
+    sendRegistrationConfirmationEmail,
+    sendRegistrationCompletionEmail
+};

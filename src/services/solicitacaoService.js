@@ -1,5 +1,8 @@
+const jwt = require('jsonwebtoken')
+
 const SolicitacaoModel = require("../models/solicitacao");
 const UserTempModel = require("../models/user_temp");
+const { sendRegistrationCompletionEmail } = require('../utils/emails');
 
 class SolicitacaoService {
     async enviarSolicitacao(idUserTemp, nomeLanchonete, cnpj, imagem, cep, logradouro, numero, bairro, cidade, estado) {
@@ -96,8 +99,18 @@ class SolicitacaoService {
                 throw new Error('Solicitação não encontrada');
             }
 
-            solicitacao.status = "verificado";
-            await solicitacao.save();
+            const user_temp = await UserTempModel.findByPk(solicitacao.idUserTemp)
+
+            if (user_temp) {
+                solicitacao.status = "verificado";
+                await solicitacao.save();
+
+                const token = jwt.sign({ solicitacaoId: id }, process.env.SECRET_KEY)
+
+                await sendRegistrationCompletionEmail(user_temp.email, token)
+            } else {
+                throw new Error('User_temp não encontrado')
+            }
 
             return solicitacao;
         } catch (error) {
