@@ -40,7 +40,14 @@ const UserModel = sequelize.define('User', {
         type: DataTypes.DATE
     }
 }, {
-    tableName: 'users'
+    tableName: 'users',
+    hooks: {
+        beforeUpdate: (user, options) => {
+            if (user.changed('email')) {
+                throw new Error('O email não pode ser alterado após a criação')
+            }
+        }
+    }
 })
 
 module.exports = UserModel
