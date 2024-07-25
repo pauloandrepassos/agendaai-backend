@@ -52,6 +52,7 @@ router.post('/solicitacao', async (req, res) => {
     }
 })
 
+
 router.put('/solicitacao/:id', verificarToken('admin'), async(req, res) => {
     const { id } = req.params
 
@@ -62,5 +63,15 @@ router.put('/solicitacao/:id', verificarToken('admin'), async(req, res) => {
         return res.status(500).json({ error: `Erro ao atualizar status: ${error.message}` });
     }
 })
+
+router.get('/registrationComplation', verificarToken(), async (req, res) => {
+    const { email, token } = req.query;
+    try {
+        const result = await solicitacaoService.confirmarRegistro(token, email);
+        return res.status(200).json({ message: "Registro confirmado com sucesso", result });
+    } catch (error) {
+        return res.status(500).json({ error: `Erro ao confirmar registro: ${error.message}` });
+    }
+});
 
 module.exports = router
