@@ -33,14 +33,6 @@ const LanchoneteModel = sequelize.define('Lanchonete', {
             key: 'id'
         }
     },
-    idEndereco: { //referencia id de endereco
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: 'endereco',
-            key: 'id'
-        }
-    }
 }, {
     tableName: 'lanchonetes'
 })

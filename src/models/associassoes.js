@@ -26,29 +26,30 @@ LanchoneteModel.belongsTo(UserModel, {
     as: 'gerenteUsuario'
 });
 
-LanchoneteModel.belongsTo(EnderecoModel, {
-    foreignKey: 'id',
-    as: 'endereco',
-});
+LanchoneteModel.hasOne(EnderecoModel, {
+    foreignKey: 'idLanchonete',
+    as: 'enderecoDeLanchonete',
+    onDelete: 'CASCADE'
+})
 
-EnderecoModel.hasOne(LanchoneteModel, {
-    foreignKey: 'id',
-    as: 'lanchonete',
-});
+EnderecoModel.belongsTo(LanchoneteModel, {
+    foreignKey: 'idLanchonete',
+    as: 'enderecoLanchonete'
+})
 
 async function verificarECriarTabelas() {
     try {
         await UserTempModel.sync({ force: false });
         await SolicitacaoModel.sync({ force: false });
         await UserModel.sync({ force: false });
-        await EnderecoModel.sync({ force: false });
         await LanchoneteModel.sync({ force: false });
+        await EnderecoModel.sync({ force: false });
 
         await UserTempModel.sync({ alter: true });
         await SolicitacaoModel.sync({ alter: true });
         await UserModel.sync({ alter: true });
-        await EnderecoModel.sync({ alter: true });
         await LanchoneteModel.sync({ alter: true });
+        await EnderecoModel.sync({ alter: true });
 
 
         console.log('Tabelas verificadas e, se necessário, criadas com sucesso.');

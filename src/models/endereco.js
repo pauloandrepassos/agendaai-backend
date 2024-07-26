@@ -6,7 +6,15 @@ const EnderecoModel = sequelize.define('Endereco', {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-      },
+    },
+    idLanchonete: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'lanchonetes',
+            key: 'id'
+        }
+    },
     cep: {
         type: DataTypes.STRING,
         allowNull: false,
