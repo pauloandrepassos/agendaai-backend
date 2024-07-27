@@ -42,6 +42,25 @@ class HorarioFuncionamentoService {
         }
     }
 
+    async deletarHorario(idLanchonete, horarioId) {
+        try {
+            const horario = await HorarioFuncionamentoModel.findOne({
+                where: {
+                    idLanchonete,
+                    id: horarioId
+                }
+            });
+
+            if (!horario) {
+                throw new Error('Horário não encontrado');
+            }
+
+            await horario.destroy();
+        } catch (error) {
+            throw error;
+        }
+    }
+
 }
 
 module.exports = HorarioFuncionamentoService
