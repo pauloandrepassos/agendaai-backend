@@ -155,21 +155,21 @@ class SolicitacaoService {
                     papel: userTemp.papel
                 }, { transaction: t });
 
+                const lanchonete = await LanchoneteModel.create({
+                    nome: solicitacao.nomeLanchonete,
+                    cnpj: solicitacao.cnpj,
+                    imagem: solicitacao.imagem,
+                    gerente: user.id,
+                }, { transaction: t });
+
                 const endereco = await EnderecoModel.create({
+                    idLanchonete: lanchonete.id,
                     cep: solicitacao.cep,
                     logradouro: solicitacao.logradouro,
                     numero: solicitacao.numero,
                     bairro: solicitacao.bairro,
                     cidade: solicitacao.cidade,
                     estado: solicitacao.estado
-                }, { transaction: t });
-
-                const lanchonete = await LanchoneteModel.create({
-                    nome: solicitacao.nomeLanchonete,
-                    cnpj: solicitacao.cnpj,
-                    imagem: solicitacao.imagem,
-                    gerente: user.id,
-                    idEndereco: endereco.id
                 }, { transaction: t });
 
                 await UserTempModel.destroy({
