@@ -1,5 +1,7 @@
 const nodemailer = require('nodemailer');
 
+const siteUrl = 'https://agendaai.vercel.app';
+
 function createTransporter() {
     return nodemailer.createTransport({
         service: 'Gmail',
@@ -11,7 +13,6 @@ function createTransporter() {
 }
 
 async function sendVerificationEmail(email, token) {
-    const siteUrl = 'http://localhost:3000';
     const transporter = createTransporter();
 
     const verificationUrl = `${siteUrl}/auth/verify?token=${token}&email=${email}`;
@@ -42,7 +43,6 @@ async function sendRegistrationConfirmationEmail(email) {
 }
 
 async function sendRegistrationCompletionEmail(email, token) {
-    const siteUrl = 'http://localhost:3000';
     const transporter = createTransporter();
 
     const verificationUrl = `${siteUrl}/finalizar-cadastro?token=${token}&email=${email}`;
