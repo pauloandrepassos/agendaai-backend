@@ -29,7 +29,7 @@ LanchoneteModel.belongsTo(UserModel, {
 
 LanchoneteModel.hasOne(EnderecoModel, {
     foreignKey: 'idLanchonete',
-    as: 'enderecoDeLanchonete',
+    as: 'endereco',
     onDelete: 'CASCADE'
 })
 

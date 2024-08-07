@@ -16,7 +16,20 @@ router.get('/lanchonete', async (req, res) => {
         return res.status(500).json({ error: `Erro ao buscar lanchonetes: ${error}`})
     }
 })
-router.get('/lanchonete/:id', async (req, res) => {
+router.get('/lanchonete/gerente', verificarToken('gerente'), async (req, res) => {
+    try {
+        const idGerente = parseInt(req.userId, 10);
+        if (isNaN(idGerente)) {
+            return res.status(400).json({ error: 'ID do gerente inválido.' });
+        }
+
+        const lanchonete = await lanchoneteService.buscarLanchonetePorGerente(idGerente);
+        return res.status(200).json(lanchonete);
+    } catch (error) {
+        return res.status(500).json({ error: `Erro ao buscar lanchonete: ${error.message}` });
+    }
+});
+router.get('/lanchonete/:id', verificarToken(), async (req, res) => {
     const { id } = req.params
     try {
         const lanchonete = await lanchoneteService.buscarLanchonete(id)
