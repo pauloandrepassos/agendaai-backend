@@ -3,7 +3,7 @@ const router = express.Router()
 
 const LanchoneteService = require('../services/lanchoneteService')
 const HorarioFuncionamentoService = require('../services/horarioFuncionamentoService')
-const { verificarToken } = require('../middleware/authMiddleware')
+const { verificarToken, verificarGerenteLanchonete } = require('../middleware/authMiddleware')
 const lanchoneteService = new LanchoneteService()
 
 const horarioFuncionamentoService = new HorarioFuncionamentoService()
@@ -39,7 +39,7 @@ router.get('/lanchonete/:id', verificarToken(), async (req, res) => {
     }
 })
 
-router.post('/lanchonete/:id/horario', /*verificarToken('gerente'),*/ async(req, res)=> {
+router.post('/lanchonete/:id/horario', verificarToken('gerente'), verificarGerenteLanchonete, async(req, res)=> {
     const { id } = req.params
     const {diaSemana, horarioAbertura, horarioFechamento} = req.body
 
