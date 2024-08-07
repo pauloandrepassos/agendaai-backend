@@ -2,12 +2,14 @@ const jwt = require('jsonwebtoken')
 
 function verificarToken(papel) {
     return function(req, res, next) {
-        const token = req.query.token//req.header('token');/
+        const token = req.query.token || req.headers['token'];
         try {
             const decoded = jwt.verify(token, process.env.SECRET_KEY)
             if(papel && decoded.papel != papel) {
                 return res.status(401).json({ error: 'Acesso negado'})
             }
+
+            req.userId = decoded.id
             next()
         } catch (error) {
             if (error.name === 'TokenExpiredError') {
