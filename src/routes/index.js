@@ -3,8 +3,9 @@ const router = express.Router()
 
 const authRoutes = require('./auth')
 const solicitacaoRoutes = require('./solicitacao')
-const lanchonereRoutes = require('./lanchonete')
+const lanchoneteRoutes = require('./lanchonete')
+const lancheRoutes = require('./lanches')
 
-router.use('/', authRoutes, solicitacaoRoutes, lanchonereRoutes)
+router.use('/', authRoutes, solicitacaoRoutes, lanchoneteRoutes, lancheRoutes)
 
 module.exports = router

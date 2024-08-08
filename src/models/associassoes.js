@@ -4,6 +4,7 @@ const UserModel = require('./user');
 const LanchoneteModel = require('./lanchonete');
 const EnderecoModel = require('./endereco');
 const HorarioFuncionamentoModel = require('./horarioFuncionamento');
+const LancheModel = require('./lanche');
 
 UserTempModel.hasOne(SolicitacaoModel, {
     foreignKey: 'idUserTemp',
@@ -49,6 +50,19 @@ EnderecoModel.belongsTo(LanchoneteModel, {
     as: 'horariosDeFuncionamento'
 })
 
+// Associação Lanchonete tem muitos Lanches
+LanchoneteModel.hasMany(LancheModel, {
+    foreignKey: 'idLanchonete',
+    as: 'lanches',
+    onDelete: 'CASCADE'
+});
+
+// Associação Lanche pertence a uma Lanchonete
+LancheModel.belongsTo(LanchoneteModel, {
+    foreignKey: 'idLanchonete',
+    as: 'lanchonete'
+});
+
 async function verificarECriarTabelas() {
     try {
         await UserTempModel.sync({ force: false });
@@ -57,6 +71,7 @@ async function verificarECriarTabelas() {
         await LanchoneteModel.sync({ force: false });
         await EnderecoModel.sync({ force: false });
         await HorarioFuncionamentoModel.sync({ force: false })
+        await LancheModel.sync({ force: false });
 
         await UserTempModel.sync({ alter: true });
         await SolicitacaoModel.sync({ alter: true });
@@ -64,6 +79,7 @@ async function verificarECriarTabelas() {
         await LanchoneteModel.sync({ alter: true });
         await EnderecoModel.sync({ alter: true });
         await HorarioFuncionamentoModel.sync({ alter: true })
+        await LancheModel.sync({ alter: true });
 
 
         console.log('Tabelas verificadas e, se necessário, criadas com sucesso.');
@@ -80,5 +96,6 @@ module.exports = {
     UserModel,
     LanchoneteModel,
     EnderecoModel,
-    HorarioFuncionamentoModel
+    HorarioFuncionamentoModel,
+    LancheModel
 };
