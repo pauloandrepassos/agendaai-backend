@@ -26,11 +26,17 @@ router.post('/lanchonete/:id/lanche', verificarToken('gerente'), verificarGerent
     }
 })
 
-router.get('/lanchonete/:id/lanche', async (req, res) => {
+router.get('/lanchonete/:id/lanche/:idLanche', async (req, res) => {
+    
     try {
-        
+        const idLanche = req.params.idLanche
+        const lanche = await lancheService.buscarLanche(idLanche)
+        if(!lanche) {
+            return res.status(404).json({ error: `Lanche não encontrado`})
+        }
+        res.status(200).json(lanche)
     } catch (error) {
-        
+        res.status(500).json({ error: 'Erro ao buscar lanches.' })
     }
 })
 

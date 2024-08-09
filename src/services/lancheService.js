@@ -25,7 +25,12 @@ class LancheService {
     }
 
     async buscarLanche(id) {
-
+        try {
+            const lanche = await LancheModel.findByPk(id)
+            return lanche
+        } catch (error) {
+            throw error
+        }
     }
 }
 
