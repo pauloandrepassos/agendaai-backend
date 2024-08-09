@@ -5,6 +5,8 @@ const LanchoneteModel = require('./lanchonete');
 const EnderecoModel = require('./endereco');
 const HorarioFuncionamentoModel = require('./horarioFuncionamento');
 const LancheModel = require('./lanche');
+const PedidoModel = require('./pedido');
+const PedidoLancheModel = require('./pedidoLanche');
 
 UserTempModel.hasOne(SolicitacaoModel, {
     foreignKey: 'idUserTemp',
@@ -63,6 +65,48 @@ LancheModel.belongsTo(LanchoneteModel, {
     as: 'lanchonete'
 });
 
+
+// Associação Pedido pertence a um Usuário
+PedidoModel.belongsTo(UserModel, {
+    foreignKey: 'idUsuario',
+    as: 'usuario'
+})
+
+// Associação Pedido pertence a uma Lanchonete
+PedidoModel.belongsTo(LanchoneteModel, {
+    foreignKey: 'idLanchonete',
+    as: 'lanchonete'
+})
+
+// Associação Usuário tem muitos Pedidos
+UserModel.hasMany(PedidoModel, {
+    foreignKey: 'idUsuario',
+    as: 'pedidos',
+    onDelete: 'CASCADE'
+})
+
+// Associação Lanchonete tem muitos Pedidos
+LanchoneteModel.hasMany(PedidoModel, {
+    foreignKey: 'idLanchonete',
+    as: 'pedidos',
+    onDelete: 'CASCADE'
+})
+
+
+// Associação Pedido tem muitos Lanches através de PedidoLanche
+PedidoModel.belongsToMany(LancheModel, {
+    through: PedidoLancheModel,
+    foreignKey: 'idPedido',
+    as: 'itens'
+})
+
+// Associação Lanche pertence a muitos Pedidos através de PedidoLanche
+LancheModel.belongsToMany(PedidoModel, {
+    through: PedidoLancheModel,
+    foreignKey: 'idLanche',
+    as: 'pedidos'
+})
+
 async function verificarECriarTabelas() {
     try {
         await UserTempModel.sync({ force: false });
@@ -72,6 +116,8 @@ async function verificarECriarTabelas() {
         await EnderecoModel.sync({ force: false });
         await HorarioFuncionamentoModel.sync({ force: false })
         await LancheModel.sync({ force: false });
+        await PedidoModel.sync({ force: false });
+        await PedidoLancheModel.sync({ force: false });
 
         await UserTempModel.sync({ alter: true });
         await SolicitacaoModel.sync({ alter: true });
@@ -80,6 +126,8 @@ async function verificarECriarTabelas() {
         await EnderecoModel.sync({ alter: true });
         await HorarioFuncionamentoModel.sync({ alter: true })
         await LancheModel.sync({ alter: true });
+        await PedidoModel.sync({ alter: true });
+        await PedidoLancheModel.sync({ alter: true });
 
 
         console.log('Tabelas verificadas e, se necessário, criadas com sucesso.');
@@ -97,5 +145,7 @@ module.exports = {
     LanchoneteModel,
     EnderecoModel,
     HorarioFuncionamentoModel,
-    LancheModel
+    LancheModel,
+    PedidoModel,
+    PedidoLancheModel
 };
