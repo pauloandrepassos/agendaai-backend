@@ -16,7 +16,7 @@ class AuthService {
                 password: hashedPassword,
                 papel
             })
-            const token = jwt.sign({ id: userTemp.id }, process.env.SECRET_KEY, { expiresIn: '5h' })
+            const token = jwt.sign({ id: userTemp.id }, process.env.SECRET_KEY, { expiresIn: 36000 });//10h
 
             if(papel == 'cliente') {
                 await sendVerificationEmail(email, token)
