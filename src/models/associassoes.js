@@ -7,6 +7,7 @@ const HorarioFuncionamentoModel = require('./horarioFuncionamento');
 const LancheModel = require('./lanche');
 const PedidoModel = require('./pedido');
 const PedidoLancheModel = require('./pedidoLanche');
+const CestoModel = require('./cestoCompras');
 
 UserTempModel.hasOne(SolicitacaoModel, {
     foreignKey: 'idUserTemp',
@@ -65,6 +66,26 @@ LancheModel.belongsTo(LanchoneteModel, {
     as: 'lanchonete'
 });
 
+// UserModel.js
+UserModel.hasMany(CestoModel, {
+    foreignKey: 'usuarioId',
+    as: 'cestos'
+})
+CestoModel.belongsTo(UserModel, {
+    foreignKey: 'usuarioId',
+    as: 'usuario'
+})
+
+// LanchoneteModel.js
+LanchoneteModel.hasMany(CestoModel, {
+    foreignKey: 'lanchoneteId',
+    as: 'cestos'
+})
+CestoModel.belongsTo(LanchoneteModel, {
+    foreignKey: 'lanchoneteId',
+    as: 'lanchonete'
+})
+
 
 // Associação Pedido pertence a um Usuário
 PedidoModel.belongsTo(UserModel, {
@@ -116,6 +137,7 @@ async function verificarECriarTabelas() {
         await EnderecoModel.sync({ force: false });
         await HorarioFuncionamentoModel.sync({ force: false })
         await LancheModel.sync({ force: false });
+        await CestoModel.sync({ force: false });
         await PedidoModel.sync({ force: false });
         await PedidoLancheModel.sync({ force: false });
 
@@ -126,6 +148,7 @@ async function verificarECriarTabelas() {
         await EnderecoModel.sync({ alter: true });
         await HorarioFuncionamentoModel.sync({ alter: true })
         await LancheModel.sync({ alter: true });
+        await CestoModel.sync({ alter: true });
         await PedidoModel.sync({ alter: true });
         await PedidoLancheModel.sync({ alter: true });
 
@@ -146,6 +169,7 @@ module.exports = {
     EnderecoModel,
     HorarioFuncionamentoModel,
     LancheModel,
+    CestoModel,
     PedidoModel,
     PedidoLancheModel
 };
