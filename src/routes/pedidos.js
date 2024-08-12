@@ -5,9 +5,11 @@ const { verificarToken } = require('../middleware/authMiddleware')
 const pedidoService = new PedidoService()
 
 // Rota para criar um novo pedido
-router.post('/pedido', verificarToken(), async (req, res) => {
+router.post('/pedido', verificarToken('cliente'), async (req, res) => {
     try {
-        const { idUsuario, idLanchonete, lanches } = req.body
+        const idUsuario = req.userId
+        const { idLanchonete, lanches } = req.body
+        console.log(lanches)
         const pedido = await pedidoService.cadastrarPedido(idUsuario, idLanchonete, lanches)
         res.status(201).json(pedido)
     } catch (error) {
@@ -16,9 +18,9 @@ router.post('/pedido', verificarToken(), async (req, res) => {
 })
 
 // Rota para listar todos os pedidos de um usuário
-router.get('/usuario/:id/pedidos', async (req, res) => {
+router.get('/pedidos', verificarToken('cliente'), async (req, res) => {
     try {
-        const idUsuario = req.params.id
+        const idUsuario = req.userId
         const pedidos = await pedidoService.listarPedidosUsuario(idUsuario)
         res.status(200).json(pedidos)
     } catch (error) {
