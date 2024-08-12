@@ -1,8 +1,55 @@
 const CestoModel = require("../models/cestoCompras")
 const LancheModel = require("../models/lanche")
+const LanchoneteModel = require("../models/lanchonete")
 const UserModel = require("../models/user")
 
 class CestoService {
+    async buscarCesto(userId) {
+        try {
+            const cesto = await CestoModel.findOne({
+                where: { usuarioId: userId },
+                include: [
+                    {
+                        model: LanchoneteModel,
+                        as: 'lanchonete',
+                        attributes: ['nome'] // Inclui apenas o nome da lanchonete
+                    }
+                ]
+            })
+
+            if (!cesto) {
+                return
+            }
+
+            const lancheIds = cesto.lanches.map(item => item.lancheId)
+            const lanchesDetalhados = await LancheModel.findAll({
+                where: { id: lancheIds }
+            })
+
+            const lanchesComDetalhes = cesto.lanches.map(item => {
+                const lancheDetalhado = lanchesDetalhados.find(lanche => lanche.id === item.lancheId)
+                return {
+                    lancheId: item.lancheId,
+                    quantidade: item.quantidade,
+                    nome: lancheDetalhado.nome,
+                    preco: lancheDetalhado.preco,
+                    imagem: lancheDetalhado.imagem
+                }
+            })
+
+            return {
+                id: cesto.id,
+                usuarioId: cesto.usuarioId,
+                lanchoneteId: cesto.lanchoneteId,
+                lanchoneteNome: cesto.lanchonete.nome,
+                lanches: lanchesComDetalhes,
+                createdAt: cesto.createdAt,
+                updatedAt: cesto.updatedAt
+            }
+        } catch (error) {
+            throw error
+        }
+    }
     async adicionarLancheAoCesto(userId, lanchoneteId, lancheId, quantidade) {
         try {
             // Verifica se o usuário existe
