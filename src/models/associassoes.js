@@ -159,7 +159,7 @@ async function verificarECriarTabelas() {
     }
 }
 
-verificarECriarTabelas();
+//verificarECriarTabelas();
 
 module.exports = {
     UserTempModel,
