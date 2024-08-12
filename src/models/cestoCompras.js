@@ -27,15 +27,15 @@ const CestoModel = sequelize.define('Cesto', {
     },
     lanches: {
         type: DataTypes.JSON,
-        // Exemplo de estrutura esperada: [{ lancheId: 1, quantidade: 2 }, { lancheId: 3, quantidade: 1 }]
+        // Exemplo de estrutura esperada: [{ idLanche: 1, quantidade: 2 }, { idLanche: 3, quantidade: 1 }]
         validate: {
             isArrayWithObjects(value) {
                 if (!Array.isArray(value)) {
                     throw new Error('Lanches deve ser um array.')
                 }
                 value.forEach(item => {
-                    if (typeof item.lancheId !== 'number' || typeof item.quantidade !== 'number') {
-                        throw new Error('Cada item deve conter lancheId e quantidade como números.')
+                    if (typeof item.idLanche !== 'number' || typeof item.quantidade !== 'number') {
+                        throw new Error('Cada item deve conter idLanche e quantidade como números.')
                     }
                 })
             }

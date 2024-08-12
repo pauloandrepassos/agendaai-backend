@@ -21,15 +21,15 @@ class CestoService {
                 return
             }
 
-            const lancheIds = cesto.lanches.map(item => item.lancheId)
+            const idsLanche = cesto.lanches.map(item => item.idLanche)
             const lanchesDetalhados = await LancheModel.findAll({
-                where: { id: lancheIds }
+                where: { id: idsLanche }
             })
 
             const lanchesComDetalhes = cesto.lanches.map(item => {
-                const lancheDetalhado = lanchesDetalhados.find(lanche => lanche.id === item.lancheId)
+                const lancheDetalhado = lanchesDetalhados.find(lanche => lanche.id === item.idLanche)
                 return {
-                    lancheId: item.lancheId,
+                    idLanche: item.idLanche,
                     quantidade: item.quantidade,
                     nome: lancheDetalhado.nome,
                     preco: lancheDetalhado.preco,
@@ -50,7 +50,7 @@ class CestoService {
             throw error
         }
     }
-    async adicionarLancheAoCesto(userId, lanchoneteId, lancheId, quantidade) {
+    async adicionarLancheAoCesto(userId, lanchoneteId, idLanche, quantidade) {
         try {
             // Verifica se o usuário existe
             const usuario = await UserModel.findByPk(userId)
@@ -59,7 +59,7 @@ class CestoService {
             }
 
             // Verifica se o lanche existe
-            const lanche = await LancheModel.findByPk(lancheId)
+            const lanche = await LancheModel.findByPk(idLanche)
             if (!lanche) {
                 throw new Error('Lanche não encontrado')
             }
@@ -75,7 +75,7 @@ class CestoService {
                     usuarioId: userId,
                     lanchoneteId: lanchoneteId,
                     lanches: [{
-                        lancheId: lancheId,
+                        idLanche: idLanche,
                         quantidade: quantidade
                     }]
                 })
@@ -85,7 +85,7 @@ class CestoService {
 
                 // Verifica se o lanche já está no cesto
                 const lancheExistenteIndex = lanchesAtualizados.findIndex(
-                    (item) => item.lancheId === lancheId
+                    (item) => item.idLanche === idLanche
                 )
 
                 if (lancheExistenteIndex !== -1) {
@@ -97,7 +97,7 @@ class CestoService {
                 } else {
                     // Adiciona o novo lanche ao cesto
                     lanchesAtualizados.push({
-                        lancheId: lancheId,
+                        idLanche: idLanche,
                         quantidade: quantidade
                     })
                 }
@@ -118,7 +118,7 @@ class CestoService {
         }
     }
 
-    async removerLancheDoCesto(userId, lancheId) {
+    async removerLancheDoCesto(userId, idLanche) {
         try {
             // Busca o cesto do usuário
             const cesto = await CestoModel.findOne({
@@ -130,7 +130,7 @@ class CestoService {
             }
 
             // Verifica se o lanche está no cesto
-            const lanchesAtualizados = cesto.lanches.filter(item => item.lancheId !== parseInt(lancheId))
+            const lanchesAtualizados = cesto.lanches.filter(item => item.idLanche !== parseInt(idLanche))
 
             if (lanchesAtualizados.length === cesto.lanches.length) {
                 throw new Error('Lanche não encontrado no cesto')
