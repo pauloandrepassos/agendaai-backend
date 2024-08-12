@@ -117,6 +117,36 @@ class CestoService {
             throw error
         }
     }
+
+    async removerLancheDoCesto(userId, lancheId) {
+        try {
+            // Busca o cesto do usuário
+            const cesto = await CestoModel.findOne({
+                where: { usuarioId: userId }
+            })
+
+            if (!cesto) {
+                throw new Error('Cesto não encontrado')
+            }
+
+            // Verifica se o lanche está no cesto
+            const lanchesAtualizados = cesto.lanches.filter(item => item.lancheId !== parseInt(lancheId))
+
+            if (lanchesAtualizados.length === cesto.lanches.length) {
+                throw new Error('Lanche não encontrado no cesto')
+            }
+
+            // Atualiza o cesto com a lista de lanches atualizada
+            cesto.lanches = lanchesAtualizados
+
+            // Salva as alterações
+            await cesto.save()
+
+            return cesto
+        } catch (error) {
+            throw error
+        }
+    }
 }
 
 module.exports = CestoService

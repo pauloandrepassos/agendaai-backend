@@ -28,5 +28,21 @@ router.post('/cesto/adicionar', verificarToken('cliente'), async (req, res) => {
         res.status(500).json({ error: `Erro ao adicionar lanche ao cesto. ${error.message}` })
     }
 })
+router.delete('/cesto/remover/:idLanche', verificarToken('cliente'), async (req, res) => {
+    try {
+        const { idLanche } = req.params
+        const idUsuario = req.userId
+        const cesto = await cestoService.removerLancheDoCesto(idUsuario, idLanche)
+        
+        if (!cesto) {
+            return res.status(404).json({ error: 'Lanche ou cesto não encontrado' })
+        }
+        
+        res.status(200).json(cesto)
+    } catch (error) {
+        res.status(500).json({ error: `Erro ao remover lanche do cesto: ${error.message}` })
+    }
+})
+
 
 module.exports = router
