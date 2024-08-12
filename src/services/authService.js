@@ -16,7 +16,7 @@ class AuthService {
                 password: hashedPassword,
                 papel
             })
-            const token = jwt.sign({ id: userTemp.id }, process.env.SECRET_KEY, { expiresIn: 36000 });//10h
+            const token = jwt.sign({ id: userTemp.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
 
             if(papel == 'cliente') {
                 await sendVerificationEmail(email, token)
@@ -79,7 +79,7 @@ class AuthService {
                 console.log("invalido")
                 throw new Error('Email ou senha inválido!')
             }
-            const token = jwt.sign({ id: user.id, email: user.email, papel: user.papel }, process.env.SECRET_KEY, { expiresIn: '1h' })
+            const token = jwt.sign({ id: user.id, email: user.email, papel: user.papel }, process.env.SECRET_KEY, { expiresIn: '10h' })
             return { user, token }
         } catch (error) {
             throw error
