@@ -40,10 +40,10 @@ class PedidoService {
             pedido.total = total
             await pedido.save({ transaction })
 
-            await CestoModel.update(
-                { lanches: [] },
-                { where: { usuarioId: idUsuario }, transaction }
-            )
+            await CestoModel.destroy({
+                where: { usuarioId: idUsuario },
+                transaction
+            })
     
             await transaction.commit()
             return pedido
