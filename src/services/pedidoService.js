@@ -1,6 +1,7 @@
 const PedidoModel = require('../models/pedido')
 const PedidoLancheModel = require('../models/pedidoLanche')
 const LancheModel = require('../models/lanche')
+const CestoModel = require('../models/cestoCompras')
 
 class PedidoService {
     async cadastrarPedido(idUsuario, idLanchonete, lanches) {
@@ -38,6 +39,11 @@ class PedidoService {
             // Atualizar o total do pedido
             pedido.total = total
             await pedido.save({ transaction })
+
+            await CestoModel.update(
+                { lanches: [] },
+                { where: { usuarioId: idUsuario }, transaction }
+            )
     
             await transaction.commit()
             return pedido
