@@ -23,6 +23,11 @@ router.post('/cesto/adicionar', verificarToken('cliente'), async (req, res) => {
         const { idLanchonete, idLanche, quantidade } = req.body
         const idUsuario = req.userId
         const cesto = await cestoService.adicionarLancheAoCesto(idUsuario, idLanchonete, idLanche, quantidade)
+
+        const notifyClient = req.app.get('notifyClient');
+        notifyClient(idUsuario, { type: 'cestoAtualizado', cesto }); // Notifica o usuário específico
+
+
         res.status(200).json(cesto)
     } catch (error) {
         res.status(500).json({ error: `Erro ao adicionar lanche ao cesto. ${error.message}` })
