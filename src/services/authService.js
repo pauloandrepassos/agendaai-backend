@@ -79,6 +79,8 @@ class AuthService {
                 console.log("invalido")
                 throw new Error('Email ou senha inválido!')
             }
+            user.ultimo_login = new Date();
+            await user.save();
             const token = jwt.sign({ id: user.id, email: user.email, papel: user.papel }, process.env.SECRET_KEY, { expiresIn: '10h' })
             return { user, token }
         } catch (error) {
