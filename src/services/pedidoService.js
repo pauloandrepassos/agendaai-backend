@@ -2,6 +2,7 @@ const PedidoModel = require('../models/pedido')
 const PedidoLancheModel = require('../models/pedidoLanche')
 const LancheModel = require('../models/lanche')
 const CestoModel = require('../models/cestoCompras')
+const LanchoneteModel = require('../models/lanchonete')
 
 class PedidoService {
     async cadastrarPedido(idUsuario, idLanchonete, lanches) {
@@ -57,20 +58,46 @@ class PedidoService {
         try {
             const pedidos = await PedidoModel.findAll({
                 where: { idUsuario },
-                include: [{
-                    model: LancheModel,
-                    as: 'itens',
-                    through: {
-                        attributes: ['quantidade', 'precoUnitario', 'total']
+                include: [
+                    {
+                        model: LancheModel,
+                        as: 'itens',
+                        through: {
+                            attributes: ['quantidade', 'precoUnitario'],
+                        },
+                    },
+                    {
+                        model: LanchoneteModel,
+                        as: 'lanchonete',
+                        attributes: ['nome'],
                     }
-                }],
-                order: [['createdAt', 'DESC']]
-            })
-            return pedidos
+                ],
+                order: [['createdAt', 'DESC']],
+            });
+    
+            // Mapeando os pedidos para o formato desejado
+            return pedidos.map(pedido => ({
+                id: pedido.id,
+                total: pedido.total,
+                status: pedido.status,
+                idUsuario: pedido.idUsuario,
+                idLanchonete: pedido.idLanchonete,
+                nomeLanchonete: pedido.lanchonete.nome,
+                itens: pedido.itens.map(item => ({
+                    id: item.id,
+                    nome: item.nome,
+                    descricao: item.descricao,
+                    tipo: item.tipo,
+                    imagem: item.imagem,
+                    quantidade: item.PedidoLanche.quantidade,
+                    precoUnitario: item.PedidoLanche.precoUnitario,
+                })),
+            }));
         } catch (error) {
-            throw error
+            throw error;
         }
     }
+    
 
     async listarPedidosLanchonete(idLanchonete) {
         try {
