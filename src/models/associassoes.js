@@ -131,27 +131,27 @@ LancheModel.belongsToMany(PedidoModel, {
 
 async function verificarECriarTabelas() {
     try {
-        await UserTempModel.sync({ force: false });
-        await SolicitacaoModel.sync({ force: false });
-        await UserModel.sync({ force: false });
-        await LanchoneteModel.sync({ force: false });
-        await EnderecoModel.sync({ force: false });
-        await HorarioFuncionamentoModel.sync({ force: false })
-        await LancheModel.sync({ force: false });
-        await CestoModel.sync({ force: false });
-        await PedidoModel.sync({ force: false });
-        await PedidoLancheModel.sync({ force: false });
+        //await UserTempModel.sync({ force: false });
+        //await SolicitacaoModel.sync({ force: false });
+        //await UserModel.sync({ force: false });
+        //await LanchoneteModel.sync({ force: false });
+        //await EnderecoModel.sync({ force: false });
+        //await HorarioFuncionamentoModel.sync({ force: false })
+        //await LancheModel.sync({ force: false });
+        //await CestoModel.sync({ force: false });
+        //await PedidoModel.sync({ force: false });
+        //await PedidoLancheModel.sync({ force: false });
 
-        await UserTempModel.sync({ alter: true });
-        await SolicitacaoModel.sync({ alter: true });
-        await UserModel.sync({ alter: true });
-        await LanchoneteModel.sync({ alter: true });
-        await EnderecoModel.sync({ alter: true });
-        await HorarioFuncionamentoModel.sync({ alter: true })
-        await LancheModel.sync({ alter: true });
-        await CestoModel.sync({ alter: true });
-        await PedidoModel.sync({ alter: true });
-        await PedidoLancheModel.sync({ alter: true });
+        //await UserTempModel.sync({ alter: true });
+        //await SolicitacaoModel.sync({ alter: true });
+        //await UserModel.sync({ alter: true });
+        //await LanchoneteModel.sync({ alter: true });
+        //await EnderecoModel.sync({ alter: true });
+        //await HorarioFuncionamentoModel.sync({ alter: true })
+        //await LancheModel.sync({ alter: true });
+        //await CestoModel.sync({ alter: true });
+        //await PedidoModel.sync({ alter: true });
+        //await PedidoLancheModel.sync({ alter: true });
 
 
         console.log('Tabelas verificadas e, se necessário, criadas com sucesso.');
