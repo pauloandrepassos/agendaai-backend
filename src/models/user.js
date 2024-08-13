@@ -38,7 +38,11 @@ const UserModel = sequelize.define('User', {
     },
     ultimo_login: {
         type: DataTypes.DATE
-    }
+    },
+    
+    imagem: {
+        type: DataTypes.STRING
+    },
 }, {
     tableName: 'users',
     hooks: {
