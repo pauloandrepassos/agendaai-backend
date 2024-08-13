@@ -40,4 +40,25 @@ router.get('/user/:id', verificarToken(), async (req, res) => {
     }
 })
 
+router.put('/user/alterar-foto', verificarToken(), async (req, res) => {
+    try {
+        const idUsuario = req.userId
+        const { imagem } = req.body
+
+        if (!imagem) {
+            return res.status(400).json({ error: 'Imagem é obrigatória.' })
+        }
+
+        const userAtualizado = await userService.atualizarImagem(idUsuario, imagem)
+
+        if (!userAtualizado) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' })
+        }
+
+        res.status(200).json({ message: 'Imagem atualizada com sucesso.', user: userAtualizado })
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao atualizar a imagem do usuário.' })
+    }
+})
+
 module.exports = router

@@ -22,6 +22,23 @@ class UserService {
             throw error
         }
     }
+
+    async atualizarImagem(id, imagem) {
+        try {
+            const user = await UserModel.findByPk(id)
+
+            if (!user) {
+                return null
+            }
+
+            user.imagem = imagem
+            await user.save()
+
+            return user
+        } catch (error) {
+            throw error
+        }
+    }
 }
 
 module.exports = UserService
