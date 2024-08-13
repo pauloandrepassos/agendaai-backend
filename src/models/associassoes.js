@@ -125,7 +125,8 @@ PedidoModel.belongsToMany(LancheModel, {
 LancheModel.belongsToMany(PedidoModel, {
     through: PedidoLancheModel,
     foreignKey: 'idLanche',
-    as: 'pedidos'
+    as: 'pedidos',
+    onDelete: 'CASCADE'
 })
 
 async function verificarECriarTabelas() {
