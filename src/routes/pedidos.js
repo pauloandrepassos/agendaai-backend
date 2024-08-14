@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const PedidoService = require('../services/pedidoService')
-const { verificarToken } = require('../middleware/authMiddleware')
+const { verificarToken, verificarTokenGerente, verificarTokenCliente } = require('../middleware/authMiddleware')
 const pedidoService = new PedidoService()
 
 // Rota para criar um novo pedido
@@ -18,7 +18,7 @@ router.post('/pedido', verificarToken('cliente'), async (req, res) => {
 })
 
 // Rota para listar todos os pedidos de um usuário
-router.get('/pedidos', verificarToken('cliente'), async (req, res) => {
+router.get('/pedidos', verificarTokenCliente, async (req, res) => {
     try {
         const idUsuario = req.userId
         const pedidos = await pedidoService.listarPedidosUsuario(idUsuario)
@@ -29,9 +29,10 @@ router.get('/pedidos', verificarToken('cliente'), async (req, res) => {
 })
 
 // Rota para listar todos os pedidos de uma lanchonete
-router.get('/lanchonete/:id/pedidos', async (req, res) => {
+router.get('/lanchonete-pedidos', verificarTokenGerente, async (req, res) => {
+    console.log('lanchonete-pedidos-aqui')
     try {
-        const idLanchonete = req.params.id
+        const idLanchonete = req.lanchoneteId
         const pedidos = await pedidoService.listarPedidosLanchonete(idLanchonete)
         res.status(200).json(pedidos)
     } catch (error) {
