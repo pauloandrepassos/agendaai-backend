@@ -48,6 +48,20 @@ router.delete('/cesto/remover/:idLanche', verificarToken('cliente'), async (req,
         res.status(500).json({ error: `Erro ao remover lanche do cesto: ${error.message}` })
     }
 })
+router.delete('/cesto', verificarToken('cliente'), async (req, res) => {
+    try {
+        const idUsuario = req.userId
+        const cesto = await cestoService.removerCesto(idUsuario)
+        
+        if (!cesto) {
+            return res.status(404).json({ error: 'Cesto não encontrado' })
+        }
+        
+        res.status(200).json({ message: 'Cesto removido com sucesso' })
+    } catch (error) {
+        res.status(500).json({ error: `Erro ao remover cesto: ${error.message}` })
+    }
+})
 
 
 module.exports = router

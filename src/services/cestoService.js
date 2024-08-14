@@ -182,6 +182,25 @@ class CestoService {
             throw error
         }
     }
+    async removerCesto(idUsuario) {
+        try {
+            const cesto = await CestoModel.findOne({
+                where: { usuarioId: idUsuario }
+            })
+
+            console.log(cesto)
+    
+            if (!cesto) {
+                throw new Error('Cesto não encontrado')
+            }
+    
+            await cesto.destroy()
+    
+            return { message: 'Cesto removido com sucesso' }
+        } catch (error) {
+            throw error
+        }
+    }
 }
 
 module.exports = CestoService
