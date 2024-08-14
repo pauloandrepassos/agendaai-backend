@@ -52,4 +52,27 @@ router.patch('/pedido/:id/status', async (req, res) => {
     }
 })
 
+router.patch('/pedido/:id/confirmar-retirada', verificarTokenGerente, async (req, res) => {
+    try {
+        const idPedido = req.params.id
+        const status = 'retirado'
+        const pedidoAtualizado = await pedidoService.atualizarStatusPedido(idPedido, status)
+
+        const notifyClient = req.app.get('notifyClient')
+        const idUsuario = pedidoAtualizado.idUsuario
+        console.log(`id: ${idUsuario}`)
+        if (notifyClient) {
+            notifyClient(idUsuario, {
+                type: 'pedidoRetirado',
+                message: 'Seu pedido foi retirado com sucesso!',
+                pedido: pedidoAtualizado
+            })
+        }
+
+        res.status(200).json(pedidoAtualizado)
+    } catch (error) {
+        res.status(500).json({ error: `Erro ao atualizar o status do pedido.: ${error}` })
+    }
+})
+
 module.exports = router
