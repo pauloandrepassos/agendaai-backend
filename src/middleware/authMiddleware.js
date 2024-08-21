@@ -97,7 +97,7 @@ function verificarTokenCliente(req, res, next) {
 
 async function verificarTokenGerente(req, res, next) {
     console.log('chegou no middleware verficarTokenGerente')
-    const token = req.query.token || req.headers['token'];
+    const token = req.headers['token'];
     try {
         const decoded = jwt.verify(token, process.env.SECRET_KEY);
         
