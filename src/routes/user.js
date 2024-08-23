@@ -1,5 +1,5 @@
 const express = require("express")
-const { verificarToken } = require("../middleware/authMiddleware")
+const { verificarToken, verificarTokenAdmin } = require("../middleware/authMiddleware")
 const router = express.Router()
 const UserService = require('../services/userService')
 const userService = new UserService()
@@ -13,6 +13,16 @@ router.get('/users', verificarToken(), async (req, res) => {
         res.status(500).json({ error: 'Erro ao listar usuários.' })
     }
 })
+
+router.get('/users/count', verificarTokenAdmin, async (req, res) => {
+    try {
+        const quantidadeUsuarios = await userService.contarUsuarios()
+        res.status(200).json({ quantidade: quantidadeUsuarios })
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao contar usuários.' })
+    }
+})
+
 
 router.get('/user', verificarToken(), async (req, res) => {
     try {

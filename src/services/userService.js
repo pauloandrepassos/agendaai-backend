@@ -12,6 +12,15 @@ class UserService {
         }
     }
 
+    async contarUsuarios() {
+        try {
+            const quantidade = await UserModel.count()
+            return quantidade
+        } catch (error) {
+            throw error
+        }
+    }
+
     async buscarUsuario(id) {
         try {
             const user = await UserModel.findByPk(id, {
