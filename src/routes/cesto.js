@@ -30,7 +30,11 @@ router.post('/cesto/adicionar', verificarToken('cliente'), async (req, res) => {
 
         res.status(200).json(cesto)
     } catch (error) {
-        res.status(500).json({ error: `Erro ao adicionar lanche ao cesto. ${error.message}` })
+        if (error.message === 'lanchonete diferente') {
+            res.status(400).json({ error: 'Não é possível adicionar itens de uma lanchonete diferente no mesmo cesto.' });
+        } else {
+            res.status(500).json({ error: `Erro ao adicionar lanche ao cesto. ${error.message}` });
+        }
     }
 })
 router.delete('/cesto/remover/:idLanche', verificarToken('cliente'), async (req, res) => {

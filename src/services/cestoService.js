@@ -66,7 +66,7 @@ class CestoService {
     
             // Verifica se o usuário já tem um cesto para a lanchonete específica
             let cesto = await CestoModel.findOne({
-                where: { usuarioId: userId, lanchoneteId: lanchoneteId },
+                where: { usuarioId: userId },
             })
     
             // Se o cesto não existir, cria um novo já adicionando o lanche
@@ -79,6 +79,8 @@ class CestoService {
                         quantidade: quantidade
                     }]
                 })
+            } else if(cesto.lanchoneteId != lanchoneteId) {
+                throw new Error('lanchonete diferente')
             } else {
                 // Cria um novo array para "lanches"
                 let lanchesAtualizados = [...cesto.lanches]
