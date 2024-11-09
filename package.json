@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.ts",
     "lint": "eslint 'src/**/*.{js,ts}'",
-    "lint-fix": "eslint ./src .test --ext .ts --fix"
+    "lint-fix": "eslint ./src .test --ext .ts --fix",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,7 @@
     "typescript-eslint": "^8.13.0"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.21.1",
     "pg": "^8.13.1",
     "typeorm": "^0.3.20"
