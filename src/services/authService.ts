@@ -1,11 +1,10 @@
-import AppDataSource from "../database/config";
-import { PendingUser } from "../models/PendigUser";
-import { User } from "../models/User";
-import { Repository } from "typeorm";
+import AppDataSource from "../database/config"
+import { PendingUser } from "../models/PendigUser"
+import { User } from "../models/User"
+import { Repository } from "typeorm"
 import bcrypt from 'bcrypt'
-import UserValidator from "../validators/UserValidator";
 import jwt from 'jsonwebtoken'
-import { sendVerificationEmail } from "../utils/emails";
+import { sendVerificationEmail } from "../utils/emails"
 
 class AuthService {
     private userRepository: Repository<User>
@@ -17,12 +16,12 @@ class AuthService {
     }
 
     async hashPassword(password: string): Promise<string> {
-        const saltRounds = 10;
-        return await bcrypt.hash(password, saltRounds);
+        const saltRounds = 10
+        return await bcrypt.hash(password, saltRounds)
     }
 
     async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
-        return await bcrypt.compare(password, hashedPassword);
+        return await bcrypt.compare(password, hashedPassword)
     }
 
     public async register(
@@ -34,16 +33,15 @@ class AuthService {
     ): Promise<PendingUser | null> {
 
         try {
-            UserValidator.validateRegisterFields(name, cpf, email, password, phone);
 
-            const emailExists = await this.pendingUserRepository.findOne({ where: { email } });
-            const cpfExists = await this.pendingUserRepository.findOne({ where: { cpf } });
+            const emailExists = await this.pendingUserRepository.findOne({ where: { email } })
+            const cpfExists = await this.pendingUserRepository.findOne({ where: { cpf } })
 
             if (emailExists || cpfExists) {
-                throw new Error("Usuário com este email ou CPF já existe.");
+                throw new Error("Usuário com este email ou CPF já existe.")
             }
 
-            const hashedPassword = await this.hashPassword(password);
+            const hashedPassword = await this.hashPassword(password)
 
             const pendingUser = this.pendingUserRepository.create({
                 name,
@@ -51,14 +49,14 @@ class AuthService {
                 email,
                 password: hashedPassword,
                 phone,
-            });
+            })
 
-            await this.pendingUserRepository.save(pendingUser);
+            await this.pendingUserRepository.save(pendingUser)
 
-            const secretKey = process.env.SECRET_KEY;
+            const secretKey = process.env.SECRET_KEY
 
             if (!secretKey) {
-                throw new Error("SECRET_KEY is not defined in environment variables");
+                throw new Error("SECRET_KEY is not defined in environment variables")
             }
 
             const token = jwt.sign({ id: pendingUser.id }, secretKey, { expiresIn: '1h' })
@@ -66,10 +64,53 @@ class AuthService {
 
             sendVerificationEmail(email, token)
 
-            return pendingUser;
+            return pendingUser
         } catch (error) {
-            console.error("Erro ao registrar usuário:", error);
+            console.error("Erro ao registrar usuário:", error)
             throw error
+        }
+    }
+
+    public async verifyEmailToken(email: string, token: string): Promise<User | null> {
+        const pendingUser = await this.pendingUserRepository.findOne({ where: { email } })
+        if (!pendingUser) {
+            throw new Error("Usuário não encontrado ou já verificado.")
+        }
+
+        const secretKey = process.env.SECRET_KEY
+        if (!secretKey) {
+            throw new Error("SECRET_KEY não está definido nas variáveis de ambiente")
+        }
+
+        try {
+            const decodedToken = jwt.verify(token, secretKey) as { id: number }
+            if (decodedToken.id !== pendingUser.id) {
+                throw new Error("Token inválido para o usuário fornecido.")
+            }
+
+            const newUser = this.userRepository.create({
+                name: pendingUser.name,
+                cpf: pendingUser.cpf,
+                email: pendingUser.email,
+                password: pendingUser.password,
+                phone: pendingUser.phone,
+            })
+            await this.userRepository.save(newUser)
+
+            await this.pendingUserRepository.remove(pendingUser)
+
+            return newUser
+        } catch (error) {
+            if (error instanceof jwt.TokenExpiredError) {
+                console.error("Token expirado:", error);
+                throw new Error("Token expirado.");
+            } else if (error instanceof jwt.JsonWebTokenError) {
+                console.error("Token inválido:", error);
+                throw new Error("Token inválido.");
+            } else {
+                console.error("Erro ao verificar o email:", error);
+                throw new Error("Erro ao verificar o email.");
+            }
         }
     }
 }
