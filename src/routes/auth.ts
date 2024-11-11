@@ -17,7 +17,11 @@ authRouter.post("/register", validateRegister, async (req: Request, res: Respons
         })
 
     } catch (error) {
-        res.status(500).json({ message: "Erro interno ao registrar usuário", error })
+        if (error instanceof Error) {
+            res.status(400).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: "Erro ao registrar usuário" })
+        }
     }
 })
 
@@ -35,6 +39,28 @@ authRouter.post('/verify', async (req: Request, res: Response) => {
         } else {
             res.status(500).json({ message: "Erro interno ao verificar usuário" })
         }
+    }
+})
+
+authRouter.post('/login', async(req: Request, res: Response) => {
+    const { email, password } = req.body
+    try {
+        const token = await AuthService.signIn(email, password)
+        res.status(200).json({token})
+    } catch (error) {
+        let status = 500;
+        let message = "Erro ao fazer login";
+
+        if (error instanceof Error) {
+            if (error.message === "Usuário não encontrado") {
+                status = 404;
+                message = error.message;
+            } else if (error.message === "Email ou senha incorretos") {
+                status = 401;
+                message = error.message;
+            }
+        }
+        res.status(status).json({ error: message });
     }
 })
 

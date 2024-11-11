@@ -38,7 +38,7 @@ class AuthService {
             const cpfExists = await this.pendingUserRepository.findOne({ where: { cpf } })
 
             if (emailExists || cpfExists) {
-                throw new Error("Usuário com este email ou CPF já existe.")
+                throw new Error("Usuário com este email ou CPF já existe")
             }
 
             const hashedPassword = await this.hashPassword(password)
@@ -113,6 +113,29 @@ class AuthService {
             }
         }
     }
+
+    public async signIn(email: string, password: string) {
+        const user = await this.userRepository.findOne({
+            where: { email }
+        })
+        
+        if (!user) {
+            throw new Error("Usuário não encontrado")
+        }
+    
+        const validPassword = await bcrypt.compare(password, user.password)
+        if (!validPassword) {
+            throw new Error("Email ou senha incorretos")
+        }
+    
+        const secretKey = process.env.SECRET_KEY
+        if (!secretKey) {
+            throw new Error("SECRET_KEY não está definido nas variáveis de ambiente")
+        }
+    
+        const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: '12h' })
+        return token
+    } 
 }
 
 export default new AuthService()
