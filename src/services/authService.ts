@@ -133,7 +133,7 @@ class AuthService {
             throw new Error("SECRET_KEY não está definido nas variáveis de ambiente")
         }
 
-        const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: '12h' })
+        const token = jwt.sign({ id: user.id, type: user.user_type }, secretKey, { expiresIn: '12h' })
         return token
     }
 
