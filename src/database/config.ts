@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
 import { User } from '../models/User';
+import { PendingUser } from '../models/PendigUser';
 
 dotenv.config();
 
@@ -11,10 +12,11 @@ const AppDataSource = new DataSource({
   username: process.env.PG_USUARIO,
   password: process.env.PG_SENHA,
   database: process.env.PG_BANCO,
-  synchronize: true,
+  synchronize: false, //alterar para true para gerar a entidade
   logging: true,
   entities: [
-    User
+    User,
+    PendingUser
   ],
   migrations: [
   ],

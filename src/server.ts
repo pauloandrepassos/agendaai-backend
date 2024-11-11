@@ -1,6 +1,7 @@
 import http from 'http'
 import app from './index'
 import AppDataSource from './database/config'
+import 'module-alias/register';
 
 const PORT = process.env.PORT || 3001
 
