@@ -4,7 +4,7 @@ import { User } from "../models/User"
 import { Repository } from "typeorm"
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { sendVerificationEmail } from "../utils/emails"
+import { sendVerificationEmail, sendPasswordResetEmail } from "../utils/emails"
 
 class AuthService {
     private userRepository: Repository<User>
@@ -15,12 +15,12 @@ class AuthService {
         this.pendingUserRepository = AppDataSource.getRepository(PendingUser)
     }
 
-    async hashPassword(password: string): Promise<string> {
+    private async hashPassword(password: string): Promise<string> {
         const saltRounds = 10
         return await bcrypt.hash(password, saltRounds)
     }
 
-    async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+    private async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
         return await bcrypt.compare(password, hashedPassword)
     }
 
@@ -118,24 +118,77 @@ class AuthService {
         const user = await this.userRepository.findOne({
             where: { email }
         })
-        
+
         if (!user) {
             throw new Error("Usuário não encontrado")
         }
-    
+
         const validPassword = await bcrypt.compare(password, user.password)
         if (!validPassword) {
             throw new Error("Email ou senha incorretos")
         }
-    
+
         const secretKey = process.env.SECRET_KEY
         if (!secretKey) {
             throw new Error("SECRET_KEY não está definido nas variáveis de ambiente")
         }
-    
+
         const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: '12h' })
         return token
-    } 
+    }
+
+    public async sendPasswordResetEmail(email: string) {
+        const user = await this.userRepository.findOne({
+            where: { email }
+        })
+        if (!user) {
+            throw new Error("Usuário não encontrado")
+        }
+        const secretKey = process.env.SECRET_KEY
+        if (!secretKey) {
+            throw new Error("SECRET_KEY não está definido nas variáveis de ambiente")
+        }
+
+        const token = jwt.sign({ email: email }, secretKey, { expiresIn: '1h' })
+
+        await sendPasswordResetEmail(email, token)
+        return
+    }
+
+    public async resetPassword(token: string, newPassword: string) {
+        const secretKey = process.env.SECRET_KEY
+        if (!secretKey) {
+            throw new Error("SECRET_KEY não está definido nas variáveis de ambiente")
+        }
+        try {
+            const decodedToken = jwt.verify(token, secretKey) as { email: string}
+            
+            const user = await this.userRepository.findOne({
+                where: { email: decodedToken.email }
+            })
+
+            if(!user) {
+                throw new Error("Usuário não encontrado")
+            }
+
+            const hashedPassword = await this.hashPassword(newPassword)
+            user.password = hashedPassword
+            await this.userRepository.save(user)
+
+        } catch (error) {
+            if (error instanceof jwt.TokenExpiredError) {
+                console.error("Token expirado:", error);
+                throw new Error("Token expirado.");
+            } else if (error instanceof jwt.JsonWebTokenError) {
+                console.error("Token inválido:", error);
+                throw new Error("Token inválido.");
+            } else {
+                console.error("Erro ao verificar o email:", error);
+                throw new Error("Erro ao verificar o email.");
+            }
+        }
+
+    }
 }
 
 export default new AuthService()
