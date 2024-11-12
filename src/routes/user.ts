@@ -1,63 +1,100 @@
-import UserService from "../services/userService";
-import { Router } from "express";
+import { UserRequest } from "../types/request"
+import verifyToken from "../middlewares/authorization"
+import UserService from "../services/userService"
+import { Router } from "express"
+import { Request, Response } from 'express'
+import { validateRegister } from "../validators/validadeFields"
+import multer from "multer"
+import path from "path"
+import fs from 'fs'
+import cloudinaryService from "../services/cloudinaryService"
 
-const userRouter = Router();
+const upload = multer({ dest: 'uploads/' })
 
-// Rota para criar um novo usuário
-userRouter.post("/users", async (req, res) => {
-    try {
-        const userData = req.body;
-        const newUser = await UserService.newUser(userData);
-        res.status(201).json(newUser); // Retorna o novo usuário criado
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erro ao criar usuário", error});
-    }
-});
+const userRouter = Router()
 
-// Rota para listar todos os usuários
 userRouter.get("/users", async (req, res) => {
     try {
-        const users = await UserService.getAllUsers();
-        res.status(200).json(users); // Retorna todos os usuários
+        const users = await UserService.getAllUsers()
+        res.status(200).json(users)
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erro ao listar usuários", error});
+        console.error(error)
+        res.status(500).json({ message: "Erro ao listar usuários", error})
     }
-});
+})
 
-// Rota para buscar um usuário por ID
-userRouter.get("/users/:id", async (req, res) => {
+userRouter.get("/user", verifyToken(), async (req: UserRequest, res) => { //busca usuário pelo id do token
     try {
-        const user = await UserService.getUserById(Number(req.params.id));
-        res.status(200).json(user); // Retorna o usuário encontrado
+        const userId = req.userId
+        const user = await UserService.getUserById(Number(userId))
+        res.status(200).json(user)
     } catch (error) {
-        console.error(error);
-        res.status(404).json({ message: "Usuário não encontrado", error});
+        console.error(error)
+        res.status(404).json({ message: "Usuário não encontrado", error})
     }
-});
+})
 
-// Rota para atualizar um usuário
-userRouter.put("/users/:id", async (req, res) => {
+userRouter.get("/user/:id", async (req, res) => { //busca usuário pelo id fornecido na requisição
     try {
-        const updatedData = req.body;
-        const updatedUser = await UserService.updateUser(Number(req.params.id), updatedData);
-        res.status(200).json(updatedUser); // Retorna o usuário atualizado
+        const user = await UserService.getUserById(Number(req.params.id))
+        res.status(200).json(user)
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erro ao atualizar usuário", error});
+        console.error(error)
+        res.status(404).json({ message: "Usuário não encontrado", error})
     }
-});
+})
 
-// Rota para deletar um usuário
-userRouter.delete("/users/:id", async (req, res) => {
+userRouter.put("/user/update-image", verifyToken(), upload.single('image'), async (req: UserRequest, res: Response) => {
+    console.log("chegou na rota")
     try {
-        await UserService.deleteUser(Number(req.params.id));
-        res.status(204).send(); // Retorna 204 sem conteúdo, pois o usuário foi deletado
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erro ao deletar usuário", error});
-    }
-});
+        const userId = req.userId
+        console.log(`user id: ${userId}`)
+        if (!req.file) {
+            res.status(400).json({ error: 'Arquivo de imagem não encontrado' })
+            return
+        }
 
-export default userRouter;
+        const filePath = path.resolve(req.file.path)
+
+        const uploadResult = await cloudinaryService.uploadImage(filePath)
+
+        await UserService.updateUserImage(Number(userId), uploadResult)
+
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error("Erro ao excluir o arquivo local:", err)
+            } else {
+                console.log("Arquivo local excluído com sucesso")
+            }
+        })
+
+        
+        res.status(200).json({ message: "Imagem de usuário atualizada", imageUrl: uploadResult })
+        
+    } catch (error) {
+        let status = 500;
+        let message = "Erro ao fazer upload";
+
+        if (error instanceof Error) {
+            status = 400
+            message = error.message
+        }
+        res.status(status).json({ message: message });
+    }
+})
+
+userRouter.put("/user/:id", validateRegister, async (req: Request, res: Response) => {
+    try {
+        const allowedFields = ['name', 'phone'];
+        const updatedData = Object.fromEntries(
+            Object.entries(req.body).filter(([key]) => allowedFields.includes(key))
+        )
+        const updatedUser = await UserService.updateUser(Number(req.params.id), updatedData)
+        res.status(200).json(updatedUser)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: "Erro ao atualizar usuário", error})
+    }
+})
+
+export default userRouter
