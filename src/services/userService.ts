@@ -1,3 +1,4 @@
+import { omit } from "../utils/omit";
 import AppDataSource from "../database/config";
 import { User } from "../models/User";
 import { Repository } from "typeorm";
@@ -10,24 +11,32 @@ class UserService {
     }
 
     public async getAllUsers() {
-        return await this.userRepository.find();
+        const users = await this.userRepository.find()
+        return users.map(user => omit(user, 'password', 'cpf'))
     }
 
     public async getUserById(id: number) {
         const user = await this.userRepository.findOne({ where: { id } });
         if (!user) throw new Error("Usuário não encontrado");
-        return user;
+        return omit(user, "password");
     }
 
     public async updateUser(id: number, updatedData: Partial<User>) {
         const user = await this.getUserById(id);
         Object.assign(user, updatedData);
-        return await this.userRepository.save(user);
+        const updatedUser = await this.userRepository.save(user);
+        return omit(updatedUser, "password")
     }
 
-    public async deleteUser(id: number) {
-        const user = await this.getUserById(id);
-        return await this.userRepository.remove(user);
+    public async updateUserImage(id: number, image: string) {
+        console.log("chegou no service")
+        const user = await this.getUserById(id)
+
+        user.image = image
+
+        const updatedUser = await this.userRepository.save(user)
+
+        return omit(updatedUser, 'password')
     }
 }
 

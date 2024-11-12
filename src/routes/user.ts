@@ -4,6 +4,12 @@ import UserService from "../services/userService"
 import { Router } from "express"
 import { Request, Response } from 'express'
 import { validateRegister } from "../validators/validadeFields"
+import multer from "multer"
+import path from "path"
+import fs from 'fs'
+import cloudinaryService from "../services/cloudinaryService"
+
+const upload = multer({ dest: 'uploads/' })
 
 const userRouter = Router()
 
@@ -17,7 +23,7 @@ userRouter.get("/users", async (req, res) => {
     }
 })
 
-userRouter.get("/user", verifyToken(), async (req: UserRequest, res) => {
+userRouter.get("/user", verifyToken(), async (req: UserRequest, res) => { //busca usuário pelo id do token
     try {
         const userId = req.userId
         const user = await UserService.getUserById(Number(userId))
@@ -28,7 +34,7 @@ userRouter.get("/user", verifyToken(), async (req: UserRequest, res) => {
     }
 })
 
-userRouter.get("/user/:id", async (req, res) => {
+userRouter.get("/user/:id", async (req, res) => { //busca usuário pelo id fornecido na requisição
     try {
         const user = await UserService.getUserById(Number(req.params.id))
         res.status(200).json(user)
@@ -38,9 +44,48 @@ userRouter.get("/user/:id", async (req, res) => {
     }
 })
 
+userRouter.put("/user/update-image", verifyToken(), upload.single('image'), async (req: UserRequest, res: Response) => {
+    console.log("chegou na rota")
+    try {
+        const userId = req.userId
+        console.log(`user id: ${userId}`)
+        if (!req.file) {
+            res.status(400).json({ error: 'Arquivo de imagem não encontrado' })
+            return
+        }
+
+        const filePath = path.resolve(req.file.path)
+
+        const uploadResult = await cloudinaryService.uploadImage(filePath)
+
+        await UserService.updateUserImage(Number(userId), uploadResult)
+
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error("Erro ao excluir o arquivo local:", err)
+            } else {
+                console.log("Arquivo local excluído com sucesso")
+            }
+        })
+
+        
+        res.status(200).json({ message: "Imagem de usuário atualizada", imageUrl: uploadResult })
+        
+    } catch (error) {
+        let status = 500;
+        let message = "Erro ao fazer upload";
+
+        if (error instanceof Error) {
+            status = 400
+            message = error.message
+        }
+        res.status(status).json({ message: message });
+    }
+})
+
 userRouter.put("/user/:id", validateRegister, async (req: Request, res: Response) => {
     try {
-        const allowedFields = ['name', 'phone', 'image'];
+        const allowedFields = ['name', 'phone'];
         const updatedData = Object.fromEntries(
             Object.entries(req.body).filter(([key]) => allowedFields.includes(key))
         )
@@ -49,16 +94,6 @@ userRouter.put("/user/:id", validateRegister, async (req: Request, res: Response
     } catch (error) {
         console.error(error)
         res.status(500).json({ message: "Erro ao atualizar usuário", error})
-    }
-})
-
-userRouter.delete("/users/:id", async (req, res) => {
-    try {
-        await UserService.deleteUser(Number(req.params.id))
-        res.status(204).send()
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({ message: "Erro ao deletar usuário", error})
     }
 })
 
