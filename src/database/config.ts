@@ -1,7 +1,8 @@
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
 import { User } from '../models/User';
-
+import { Establishment } from '../models/Establishment';
+import { Address } from '../models/Address';
 dotenv.config();
 
 const AppDataSource = new DataSource({
@@ -14,12 +15,13 @@ const AppDataSource = new DataSource({
   synchronize: false, //alterar para true para gerar a entidade
   logging: true,
   entities: [
-    User
+    User,
+    Establishment,
+    Address
   ],
   migrations: [
   ],
   subscribers: [],
 });
 
-console.log(process.env.PG_HOST)
 export default AppDataSource;
