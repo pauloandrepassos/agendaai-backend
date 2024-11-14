@@ -1,8 +1,8 @@
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
 import { User } from '../models/User';
-import { PendingUser } from '../models/PendigUser';
-
+import { Establishment } from '../models/Establishment';
+import { Address } from '../models/Address';
 dotenv.config();
 
 const AppDataSource = new DataSource({
@@ -16,7 +16,8 @@ const AppDataSource = new DataSource({
   logging: true,
   entities: [
     User,
-    PendingUser
+    Establishment,
+    Address
   ],
   migrations: [
   ],
