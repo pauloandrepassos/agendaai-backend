@@ -1,6 +1,5 @@
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
-import { User } from '../models/User';
 dotenv.config();
 
 const AppDataSource = new DataSource({
@@ -12,9 +11,7 @@ const AppDataSource = new DataSource({
   database: process.env.PG_BANCO,
   synchronize: false, //alterar para true para gerar a entidade
   logging: true,
-  entities: [
-    User,
-  ],
+  entities: [`${__dirname}/../models/*.{js,ts}`],
   migrations: [
   ],
   subscribers: [],

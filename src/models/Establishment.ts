@@ -1,14 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne } from "typeorm"
+import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, OneToOne, CreateDateColumn, UpdateDateColumn } from "typeorm"
 import { User } from "./User"
 import { Address } from "./Address"
 
 interface IEstablishment {
     id: number
     name: string
-    imageUrl: string
+    logo: string
+    background_image: string
     cnpj: string
     vendor_id: number
-    address_id: Address
+    address_id: number
 }
 
 @Entity('Establishment')
@@ -20,16 +21,35 @@ export class Establishment implements IEstablishment {
     name: string
 
     @Column({ nullable: true })
-    imageUrl: string
+    logo: string
+
+    @Column({ default: null})
+    background_image: string
 
     @Column({ unique: true })
     cnpj: string
-
-    @ManyToOne(() => User)
-    @JoinColumn({ name: 'vendor_id' })
+    
+    @Column()
     vendor_id: number
+    
+    @Column()
+    address_id: number
 
-    @OneToOne(() => Address, { cascade: true })
-    @JoinColumn()
-    address_id: Address
+    @OneToOne(() => User, (user) => user.id, {
+        onDelete: 'CASCADE',
+        nullable: false
+    })
+    @JoinColumn({ name: 'vendor_id' })
+    vendor: User
+
+    @OneToOne(() => Address)
+    @JoinColumn({ name: 'address_id'})
+    address: Address
+
+    
+    @CreateDateColumn()
+    created_at: Date
+
+    @UpdateDateColumn()
+    updated_at: Date
 }
