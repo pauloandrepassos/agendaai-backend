@@ -38,7 +38,12 @@ class EstablishmentService {
     }
 
     public async getAllEstablishments() {
-        return await this.establishmentRepository.find({ relations: ['address'] })
+        return await this.establishmentRepository.find({
+            relations: [
+                'address',
+                'vendor'
+            ] 
+        })
     }
 
     public async getEstablishmentById(id: number) {

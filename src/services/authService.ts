@@ -116,7 +116,12 @@ class AuthService {
 
     public async signIn(email: string, password: string) {
         const user = await this.userRepository.findOne({
-            where: { email }
+            where: { email },
+            select: [
+                "cpf",
+                "password",
+                "user_type"
+            ]
         })
 
         if (!user) {
