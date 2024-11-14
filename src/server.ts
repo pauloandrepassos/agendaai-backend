@@ -15,3 +15,4 @@ AppDataSource.initialize()
             console.log(`Servidor rodando em http://localhost:${PORT}`)
         })
     })
+    .catch((error) => console.log("Erro ao inicializar o Data Source:", error));
