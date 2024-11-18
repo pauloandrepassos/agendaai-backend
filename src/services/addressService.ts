@@ -1,3 +1,4 @@
+import { QueryRunner } from "typeorm/browser"
 import AppDataSource from "../database/config"
 import { Address } from "../models/Address"
 import { Repository } from "typeorm"
@@ -10,8 +11,11 @@ class AddressService {
     }
 
     // Criar um novo endereço
-    public async newAddress(addressData: Partial<Address>) {
+    public async createAddress(addressData: Partial<Address>, queryRunner?: QueryRunner) {
         const address = this.addressRepository.create(addressData)
+        if(queryRunner) {
+            return queryRunner.manager.save(address)
+        }
         return await this.addressRepository.save(address)
     }
 

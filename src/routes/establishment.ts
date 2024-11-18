@@ -1,21 +1,25 @@
 import { Request, Response } from "express"
 import EstablishmentService from "../services/establishmentService"
-import AddressService from "../services/addressService"
 import { Router } from "express"
+import { validateEstablishmentRequest } from "../validators/validateEstablishmentRequest "
 
 const establishmentRouter = Router()
 
 // Rota para criar um novo estabelecimento com endereço
 establishmentRouter.post("/establishments", async (req: Request, res: Response) => {
     try {
-        // Primeiro, cria o endereço
-        const newAddress = await AddressService.newAddress(req.body)
+        const { name, logo, background_image, cnpj, zip_code, state, city, neighborhood, street, number, complement, reference_point, status, vendor_id
+        } = req.body;
 
-        // Agora, cria o estabelecimento e associa o objeto do endereço
-        const newEstablishment = await EstablishmentService.newEstablishment({
-            ...req.body,
-            address_id: newAddress.id // Passando o objeto Address completo
-        })
+        // Dados do estabelecimento
+        const establishmentData = { name, logo, background_image, cnpj, status, vendor_id
+        };
+
+        // Dados do endereço
+        const addressData = { zip_code, state, city, neighborhood, street, number, complement, reference_point
+        };
+
+        const newEstablishment = await EstablishmentService.newEstablishment( establishmentData, addressData)
 
         res.status(201).json(newEstablishment)
     } catch (error) {
@@ -47,26 +51,21 @@ establishmentRouter.get("/establishments/:id", async (req: Request, res: Respons
 })
 
 // Rota para atualizar um estabelecimento e seu endereço
-establishmentRouter.put("/establishments/:id", async (req: Request, res: Response) => {
+establishmentRouter.put("/establishments/:id", validateEstablishmentRequest, async (req: Request, res: Response) => {
     try {
-        const updatedData = req.body;
-        const { addressData } = updatedData;
+        const { name, logo, background_image, cnpj, zip_code, state, city, neighborhood, street, number, complement, reference_point, status, vendor_id
+        } = req.body;
 
-        // Verifica se o endereço foi fornecido para atualização
-        if (addressData) {
-            if (updatedData.address_id) {
-                // Atualiza o endereço existente
-                const updatedAddress = await AddressService.updateAddress(updatedData.address_id, addressData);
-                updatedData.address_id = updatedAddress.id; // Atribui o id atualizado
-            } else {
-                // Se não existir address_id, cria um novo endereço
-                const newAddress = await AddressService.newAddress(addressData);
-                updatedData.address_id = newAddress.id;
-            }
-        }
+        // Dados do estabelecimento
+        const establishmentData = { name, logo, background_image, cnpj, status, vendor_id
+        };
 
-        // Atualiza o estabelecimento com o novo endereço
-        const updatedEstablishment = await EstablishmentService.updateEstablishment(Number(req.params.id), updatedData);
+        // Dados do endereço
+        const addressData = { zip_code, state, city, neighborhood, street, number, complement, reference_point
+        };
+
+        const updatedEstablishment = await EstablishmentService.updateEstablishment(Number(req.params.id), establishmentData, addressData);
+
         res.status(200).json(updatedEstablishment);
     } catch (error) {
         console.error(error)
@@ -77,9 +76,6 @@ establishmentRouter.put("/establishments/:id", async (req: Request, res: Respons
 // Rota para deletar um estabelecimento e seu endereço
 establishmentRouter.delete("/establishments/:id", async (req: Request, res: Response) => {
     try {
-        const establishment = await EstablishmentService.getEstablishmentById(Number(req.params.id))
-
-        // Deleta o estabelecimento
         await EstablishmentService.deleteEstablishment(Number(req.params.id))
 
         res.status(204).send()
