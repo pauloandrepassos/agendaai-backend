@@ -1,6 +1,11 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
 import { User } from "./User"
 
+export enum RequestStatus {
+    PENDING = "pending",
+    APPROVED = "approved"
+}
+
 interface IEstablishmentRequest {
     id:  number
     name: string
@@ -15,7 +20,7 @@ interface IEstablishmentRequest {
     number: string
     complement: string
     reference_point: string
-    status: string
+    status: RequestStatus
     vendor_id: number
 }
 
@@ -60,8 +65,12 @@ export class EstablishmentRequest implements IEstablishmentRequest {
     @Column()
     reference_point: string
 
-    @Column()
-    status: string
+    @Column({
+        type: 'enum',
+        enum: RequestStatus,
+        default: RequestStatus.PENDING
+    })
+    status: RequestStatus
 
     @Column()
     vendor_id: number

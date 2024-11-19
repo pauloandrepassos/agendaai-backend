@@ -76,4 +76,33 @@ async function sendPasswordResetEmail(email: string, resetToken: string): Promis
     }
 }
 
-export { sendVerificationEmail, sendPasswordResetEmail }
+async function sendRegistrationCompletionEmail(email: string, token: string): Promise<void> {
+    const transporter = createTransporter()
+    const url = `${siteUrl}/rota?token=${token}email=${email}`
+
+    const emailContent = `
+        <h1>Solisitação de Cadastro Aprovada</h1>
+        <p>Para finalizar o cadastro de seu estabelecimento, clique no botão abaixo</p>
+        <a href="${url}" class="btn">Finalizar Cadastro</a>
+        <p>Ou copie e cole este link no navegador:</p>
+        <p><a href="${url}" style="color: #FA240F">${url}</a></p>
+    `
+
+    const mailOptions: SendMailOptions = {
+        from: `Agenda Aí <${process.env.EMAIL}>`,
+        to: email,
+        subject: 'Finalizae cadastro',
+        html: generateEmailHtml(emailContent)
+    }
+
+    try {
+        await transporter.sendMail(mailOptions)
+        console.log(`E-mail de finalização de cadastro enviado com sucesso para: ${email}`)
+    } catch (error) {
+        console.error("Erro ao enviar e-mail de finalização de cadastro:", error);
+        throw error
+        
+    }
+}
+
+export { sendVerificationEmail, sendPasswordResetEmail, sendRegistrationCompletionEmail }
