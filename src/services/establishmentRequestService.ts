@@ -28,6 +28,16 @@ class EstablishmentRequestService {
         return establishmentRequest
     }
 
+    public async getByVendorId(id: number) {
+        const establishmentRequest = await this.establishmentRequest.findOne({
+            where: { vendor_id: id}
+        })
+        if (!establishmentRequest) {
+            return null
+        }
+        return establishmentRequest
+    }
+
     public async create(establishmentRequestData: Partial<EstablishmentRequest>) {
         const establishmentRequest = this.establishmentRequest.create(establishmentRequestData)
         return await this.establishmentRequest.save(establishmentRequest)

@@ -2,36 +2,51 @@ import { validateEstablishmentRequest } from "../validators/validateEstablishmen
 import establishmentRequestService from "../services/establishmentRequestService";
 import { Router, Request, Response } from "express";
 import verifyToken from "../middlewares/authorization";
+import { UserRequest } from "../types/request";
 
 const router = Router()
 
-router.get("/establishmentRequest", verifyToken('admin'), async (req, res) => {
+router.get("/establishment/request/all", verifyToken('admin'), async (req, res) => {
     try {
         const establishmentRequest = await establishmentRequestService.getAll()
-        if(!establishmentRequest) {
-            res.status(404).json({ message: "Solicitações não encontradas"});
+        if (!establishmentRequest) {
+            res.status(404).json({ message: "Solicitações não encontradas" });
         }
         res.status(200).json(establishmentRequest)
     } catch (error) {
         console.error(error)
-        res.status(500).json({ message: "Erro ao listar Solicitações"})
+        res.status(500).json({ message: "Erro ao listar Solicitações" })
     }
 })
 
-router.get("/establishmentRequest/:id", verifyToken('admin'), async (req, res) => {
+router.get("/establishment/request/:id", verifyToken('admin'), async (req, res) => {
     try {
         const establishmentRequest = await establishmentRequestService.getById(Number(req.params.id))
-        if(!establishmentRequest) {
-            res.status(404).json({ message: "Solicitação não encontradas"});
+        if (!establishmentRequest) {
+            res.status(404).json({ message: "Solicitação não encontradas" });
         }
         res.status(200).json(establishmentRequest)
     } catch (error) {
         console.error(error)
-        res.status(500).json({ message: "Erro ao buscar Solicitação"})
+        res.status(500).json({ message: "Erro ao buscar Solicitação" })
     }
 })
 
-router.post("/establishmentRequest", validateEstablishmentRequest, async (req: Request, res: Response) => {
+router.get("/establishment/request", verifyToken(), async (req: UserRequest, res: Response) => {//busca com base no usuário que está autenticado, pelo id do token
+    try {
+        const establishmentRequest = await establishmentRequestService.getByVendorId(Number(req.userId))
+        if (!establishmentRequest) {
+            res.status(404).json({ message: "Solicitação não encontrada" })
+            return
+        }
+        res.status(200).json(establishmentRequest)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: "Erro ao buscar Solicitação" })
+    }
+})
+
+router.post("/establishment/request", validateEstablishmentRequest, async (req: Request, res: Response) => {
     try {
         const establishmentRequestData = req.body;
         const newEstablishmentRequest = await establishmentRequestService.create(establishmentRequestData);
@@ -42,21 +57,21 @@ router.post("/establishmentRequest", validateEstablishmentRequest, async (req: R
     }
 });
 
-router.patch("/establishmentRequest/:id/approve", verifyToken('admin'), async  (req: Request, res: Response) => {
+router.patch("/establishment/request/:id/approve", verifyToken('admin'), async (req: Request, res: Response) => {
     try {
         const { id } = req.params
         const updateRequest = await establishmentRequestService.approveRequest(Number(id))
-        res.status(200).json({ message: "Status atualizado com sucesso", updateRequest})
+        res.status(200).json({ message: "Status atualizado com sucesso", updateRequest })
     } catch {
         res.status(500).json({ message: "Erro aoatualizar status" });
     }
 })
 
-router.post("/establishmentRequest/complete", async(req: Request, res: Response) => {
+router.post("/establishment/request/complete", async (req: Request, res: Response) => {
     try {
         const { token, email } = req.body
         const newEstablishment = await establishmentRequestService.CompleteRegistration(token, email)
-        res.status(200).json({ message: "estabelecimento criado com sucesso", newEstablishment})
+        res.status(200).json({ message: "estabelecimento criado com sucesso", newEstablishment })
 
     } catch (error) {
         let status = 500
