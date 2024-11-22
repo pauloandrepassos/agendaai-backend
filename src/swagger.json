@@ -1,0 +1,616 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "API do sistema Agenda Aí",
+    "description": "API para gerenciar autenticação e registro de usuários"
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/register": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Registrar um novo usuário",
+        "description": "Endpoint para registrar um novo usuário no sistema.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "description": "Dados necessários para registrar um usuário",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "João da Silva",
+                  "minLength": 3,
+                  "description": "Nome do usuário (mínimo 3 caracteres)"
+                },
+                "cpf": {
+                  "type": "string",
+                  "example": "123.456.789-00",
+                  "description": "CPF no formato 000.000.000-00"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "joao.silva@email.com",
+                  "description": "Deve fornecer um email válido"
+                },
+                "password": {
+                  "type": "string",
+                  "format": "password",
+                  "example": "senhaSegura123",
+                  "minLength": 6,
+                  "description": "Senha de no mínimo 6 dígitos"
+                },
+                "phone": {
+                  "type": "string",
+                  "example": "+55 11 91234-5678",
+                  "description": "Número de telefone é obrigatório"
+                }
+              },
+              "required": [
+                "name",
+                "cpf",
+                "email",
+                "password",
+                "phone"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Usuário registrado com sucesso"
+          },
+          "400": {
+            "description": "Erro de validação ou erro nos dados fornecidos"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/verify": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Verificar conta de novo usuário",
+        "description": "Endpoint para verificar o token de email enviado para um novo usuário.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "description": "Dados necessários para verificar o email do usuário",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string",
+                  "example": "abc123token456",
+                  "description": "Token de verificação enviado para o email do usuário"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "joao.silva@email.com",
+                  "description": "Email do usuário a ser verificado"
+                }
+              },
+              "required": [
+                "token",
+                "email"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário verificado com sucesso"
+          },
+          "400": {
+            "description": "Erro de validação ou erro nos dados fornecidos"
+          },
+          "500": {
+            "description": "Erro interno do servidor"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Realizar login do usuário",
+        "description": "Endpoint para realizar o login de um usuário usando email e senha.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "description": "Dados necessários para login do usuário",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "joao.silva@email.com",
+                  "description": "Email do usuário"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "senhaSegura123",
+                  "description": "Senha do usuário"
+                }
+              },
+              "required": [
+                "email",
+                "password"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string",
+                  "example": "abc123token456"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Email ou senha incorretos"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao realizar login"
+          }
+        }
+      }
+    },
+    "/forgot-password": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Solicitar recuperação de senha",
+        "description": "Endpoint para solicitar o envio de um email para recuperação de senha.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "description": "Dados necessários para recuperação de senha",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "joao.silva@email.com",
+                  "description": "Email do usuário"
+                }
+              },
+              "required": [
+                "email"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email de recuperação enviado com sucesso"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao enviar email de recuperação"
+          }
+        }
+      }
+    },
+    "/reset-password": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Redefinir senha do usuário",
+        "description": "Endpoint para redefinir a senha de um usuário através do token de recuperação.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "description": "Dados necessários para redefinir a senha do usuário",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string",
+                  "example": "abc123reset456",
+                  "description": "Token de recuperação enviado para o email do usuário"
+                },
+                "newPassword": {
+                  "type": "string",
+                  "example": "novaSenhaSegura123",
+                  "description": "Nova senha do usuário"
+                }
+              },
+              "required": [
+                "token",
+                "newPassword"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Senha redefinida com sucesso"
+          },
+          "400": {
+            "description": "Token inválido ou expirado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          },
+          "500": {
+            "description": "Erro interno ao redefinir a senha"
+          }
+        }
+      }
+    },
+
+    "/establishment/request/all": {
+      "get": {
+        "tags": [
+          "Solicitação de Cadastro de Estabelecimento"
+        ],
+        "summary": "Listar todas as solicitações de estabelecimento",
+        "description": "Endpoint para listar todas as solicitações de estabelecimento. Requer autorização de administrador.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Solicitações de estabelecimento encontradas",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "PA Lanches"
+                  },
+                  "cnpj": {
+                    "type": "string",
+                    "example": "00.000.000/0000-00"
+                  },
+                  "logo": {
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Nenhuma solicitação encontrada"
+          },
+          "500": {
+            "description": "Erro interno ao listar as solicitações"
+          }
+        }
+      }
+    },
+    "/establishment/request/{id}": {
+      "get": {
+        "tags": [
+          "Solicitação de Cadastro de Estabelecimento"
+        ],
+        "summary": "Buscar solicitação de estabelecimento por ID",
+        "description": "Endpoint para buscar uma solicitação de estabelecimento pelo ID. Requer autorização de administrador.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "description": "ID da solicitação de estabelecimento"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solicitação encontrada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "PA Lanches"
+                },
+                "cnpj": {
+                  "type": "string",
+                  "example": "00.000.000/0000-00"
+                },
+                "logo": {
+                  "type": "string",
+                  "example": "https://example.com/logo.png"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Solicitação não encontrada"
+          },
+          "500": {
+            "description": "Erro interno ao buscar solicitação"
+          }
+        }
+      }
+    },
+    "/establishment/request": {
+      "get": {
+        "tags": [
+          "Solicitação de Cadastro de Estabelecimento"
+        ],
+        "summary": "Buscar solicitação de estabelecimento pelo usuário autenticado",
+        "description": "Endpoint para buscar uma solicitação de estabelecimento associada ao usuário autenticado.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Solicitação de estabelecimento encontrada",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "PA Lanches"
+                },
+                "cnpj": {
+                  "type": "string",
+                  "example": "00.000.000/0000-00"
+                },
+                "logo": {
+                  "type": "string",
+                  "example": "https://example.com/logo.png"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Solicitação não encontrada"
+          },
+          "500": {
+            "description": "Erro interno ao buscar solicitação"
+          }
+        }
+      }
+    },
+    "/establishment/request": {
+      "post": {
+        "tags": [
+          "Solicitação de Cadastro de Estabelecimento"
+        ],
+        "summary": "Criar nova solicitação de estabelecimento",
+        "description": "Endpoint para criar uma nova solicitação de estabelecimento.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "description": "Dados para a criação da solicitação de estabelecimento",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "PA Lanches"
+                },
+                "logo": {
+                  "type": "string",
+                  "example": "https://example.com/logo.png"
+                },
+                "background_image": {
+                  "type": "string",
+                  "example": "https://example.com/background.png"
+                },
+                "cnpj": {
+                  "type": "string",
+                  "example": "00.000.000/0000-00"
+                },
+                "zip_code": {
+                  "type": "string",
+                  "example": "64700-000"
+                },
+                "state": {
+                  "type": "string",
+                  "example": "PI"
+                },
+                "city": {
+                  "type": "string",
+                  "example": "Simplício Mendes"
+                },
+                "neighborhood": {
+                  "type": "string",
+                  "example": "Boa Sorte"
+                },
+                "street": {
+                  "type": "string",
+                  "example": "Tininha de Sá Urtiga"
+                },
+                "number": {
+                  "type": "string",
+                  "example": "549"
+                },
+                "complement": {
+                  "type": "string",
+                  "example": ""
+                },
+                "reference_point": {
+                  "type": "string",
+                  "example": ""
+                },
+                "vendor_id": {
+                  "type": "integer",
+                  "example": 2
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Solicitação criada com sucesso",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "PA Lanches"
+                },
+                "cnpj": {
+                  "type": "string",
+                  "example": "00.000.000/0000-00"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro de validação nos dados fornecidos"
+          },
+          "500": {
+            "description": "Erro interno ao criar solicitação"
+          }
+        }
+      }
+    },
+    "/establishment/request/{id}/approve": {
+      "patch": {
+        "tags": [
+          "Solicitação de Cadastro de Estabelecimento"
+        ],
+        "summary": "Aprovar solicitação de estabelecimento",
+        "description": "Endpoint para aprovar uma solicitação de estabelecimento. Requer autorização de administrador.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "description": "ID da solicitação de estabelecimento"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solicitação aprovada com sucesso",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Status atualizado com sucesso"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao atualizar o status"
+          }
+        }
+      }
+    },
+    "/establishment/request/complete": {
+      "post": {
+        "tags": [
+          "Solicitação de Cadastro de Estabelecimento"
+        ],
+        "summary": "Completar cadastro de estabelecimento",
+        "description": "Endpoint para completar o cadastro de um estabelecimento com base no token de recuperação.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "description": "Dados para completar o cadastro do estabelecimento",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string",
+                  "example": "abc123token"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "joao.silva@email.com"
+                }
+              },
+              "required": [
+                "token",
+                "email"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cadastro de estabelecimento concluído com sucesso",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Estabelecimento criado com sucesso"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro com o token ou email fornecido"
+          },
+          "404": {
+            "description": "Usuário ou solicitação não encontrados"
+          },
+          "500": {
+            "description": "Erro interno ao completar o cadastro"
+          }
+        }
+      }
+    }
+  }
+}
