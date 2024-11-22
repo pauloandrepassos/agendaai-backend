@@ -20,6 +20,12 @@ class UserService {
         return user
     }
 
+    public async getUserByEmail(email: string) {
+        const user = await this.userRepository.findOne({ where: { email }})
+        if (!user) throw new Error("Usuário não encontrado");
+        return user
+    }
+
     public async updateUser(id: number, updatedData: Partial<User>) {
         const user = await this.getUserById(id);
         Object.assign(user, updatedData);

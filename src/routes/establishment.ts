@@ -2,11 +2,12 @@ import { Request, Response } from "express"
 import EstablishmentService from "../services/establishmentService"
 import { Router } from "express"
 import { validateEstablishmentRequest } from "../validators/validateEstablishmentRequest "
+import verifyToken from "../middlewares/authorization"
 
 const establishmentRouter = Router()
 
 // Rota para criar um novo estabelecimento com endereço
-establishmentRouter.post("/establishments", async (req: Request, res: Response) => {
+establishmentRouter.post("/establishments", verifyToken('admin'), async (req: Request, res: Response) => {
     try {
         const { name, logo, background_image, cnpj, zip_code, state, city, neighborhood, street, number, complement, reference_point, status, vendor_id
         } = req.body;
@@ -29,7 +30,7 @@ establishmentRouter.post("/establishments", async (req: Request, res: Response) 
 })
 
 // Rota para listar todos os estabelecimentos
-establishmentRouter.get("/establishments", async (req: Request, res: Response) => {
+establishmentRouter.get("/establishments", verifyToken(), async (req: Request, res: Response) => {
     try {
         const establishments = await EstablishmentService.getAllEstablishments()
         res.status(200).json(establishments)
@@ -40,7 +41,7 @@ establishmentRouter.get("/establishments", async (req: Request, res: Response) =
 })
 
 // Rota para buscar um estabelecimento por ID
-establishmentRouter.get("/establishments/:id", async (req: Request, res: Response) => {
+establishmentRouter.get("/establishments/:id", verifyToken(), async (req: Request, res: Response) => {
     try {
         const establishment = await EstablishmentService.getEstablishmentById(Number(req.params.id))
         res.status(200).json(establishment)
@@ -51,7 +52,7 @@ establishmentRouter.get("/establishments/:id", async (req: Request, res: Respons
 })
 
 // Rota para atualizar um estabelecimento e seu endereço
-establishmentRouter.put("/establishments/:id", validateEstablishmentRequest, async (req: Request, res: Response) => {
+establishmentRouter.put("/establishments/:id", verifyToken('vendor'), validateEstablishmentRequest, async (req: Request, res: Response) => {
     try {
         const { name, logo, background_image, cnpj, zip_code, state, city, neighborhood, street, number, complement, reference_point, status, vendor_id
         } = req.body;
@@ -74,6 +75,7 @@ establishmentRouter.put("/establishments/:id", validateEstablishmentRequest, asy
 })
 
 // Rota para deletar um estabelecimento e seu endereço
+/*
 establishmentRouter.delete("/establishments/:id", async (req: Request, res: Response) => {
     try {
         await EstablishmentService.deleteEstablishment(Number(req.params.id))
@@ -83,6 +85,6 @@ establishmentRouter.delete("/establishments/:id", async (req: Request, res: Resp
         console.error(error)
         res.status(500).json({ message: "Erro ao deletar estabelecimento", error })
     }
-})
+})*/
 
 export default establishmentRouter

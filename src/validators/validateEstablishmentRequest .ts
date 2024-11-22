@@ -46,10 +46,6 @@ const validateEstablishmentRequestFields = [
         .optional()
         .isString().withMessage('Complemento deve ser uma string'),
 
-    check('status')
-        .notEmpty().withMessage('Status é obrigatório')
-        .isIn(['created', 'pending', 'approved']).withMessage('Status deve ser um dos seguintes: created, pending, approved'),
-
     check('vendor_id')
         .notEmpty().withMessage('ID do vendedor é obrigatório')
         .isInt().withMessage('ID do vendedor deve ser um número inteiro'),

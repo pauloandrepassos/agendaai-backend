@@ -118,7 +118,7 @@ class AuthService {
         const user = await this.userRepository.findOne({
             where: { email },
             select: [
-                "cpf",
+                "id",
                 "password",
                 "user_type"
             ]
