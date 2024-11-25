@@ -40,6 +40,7 @@ class OperatingHoursService {
         if (!operatingHours) {
             throw new Error("Horário de funcionamento não encontrado");
         }
+        await this.validateOperatingHoursConflict(data, id)
         Object.assign(operatingHours, data);
         return await this.operatingHoursRepository.save(operatingHours);
     }
@@ -53,7 +54,8 @@ class OperatingHoursService {
     }
 
     private async validateOperatingHoursConflict(
-        data: Partial<OperatingHours>
+        data: Partial<OperatingHours>,
+        currentId?: number
     ): Promise<void> {
         if (!data.establishment_id || !data.day_of_week) {
             throw new Error("Estabelecimento e dia da semana são obrigatórios");
@@ -67,6 +69,9 @@ class OperatingHoursService {
         });
     
         const conflictingHours = existingHours.filter((existing) => {
+            if (currentId && existing.id === currentId) {
+                return false;
+            }
             if (existing.is_closed || data.is_closed) {
                 return true
             }
@@ -91,16 +96,24 @@ class OperatingHoursService {
         })
     
         if (conflictingHours.length > 0) {
-            const conflictMessages = conflictingHours.map((conflict) => {
-                const dayName = Object.keys(Day).find(
-                    (key) => Day[key as keyof typeof Day] === conflict.day_of_week
-                ) 
-                return `Dia: ${dayName}, Horário: ${conflict.open_time} - ${conflict.close_time}`
-            })
+            const conflictDetails = conflictingHours.map((conflict) => ({
+                id: conflict.id,
+                day_of_week: conflict.day_of_week,
+                open_time: conflict.open_time,
+                close_time: conflict.close_time,
+            }))
     
-            throw new Error(
-                `Conflito de horário detectado: ${conflictMessages.join("; ")}`
-            );
+            const conflictMessages = conflictDetails.map(
+                (conflict) =>
+                    `Dia: ${Object.keys(Day).find(
+                        (key) => Day[key as keyof typeof Day] === conflict.day_of_week
+                    )}, Horário: ${conflict.open_time} - ${conflict.close_time}`
+            )
+    
+            throw {
+                message: `Conflito de horário detectado: ${conflictMessages.join("; ")}`,
+                details: conflictDetails,
+            }
         }
     }
     
