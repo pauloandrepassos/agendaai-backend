@@ -9,12 +9,12 @@ const AppDataSource = new DataSource({
   username: process.env.PG_USUARIO,
   password: process.env.PG_SENHA,
   database: process.env.PG_BANCO,
-  synchronize: false, //alterar para true para gerar a entidade
+  synchronize: true, //alterar para true para gerar a entidade
   logging: true,
   entities: [`${__dirname}/../models/*.{js,ts}`],
   migrations: [
   ],
   subscribers: [],
 });
-
+ 
 export default AppDataSource;
