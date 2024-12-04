@@ -17,21 +17,25 @@ authRouter.post("/register", validateRegister, async (req: Request, res: Respons
         })
 
     } catch (error) {
+        let status = 500;
+        let message = "Erro ao fazer login";
         if (error instanceof Error) {
-            res.status(400).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: "Erro ao registrar usuário" })
+            if (error.message.includes("email ou CPF já existe")) {
+                status = 409;
+                message = "Já existe um usuário registrado com este email ou CPF.";
+            }
         }
+        
+        res.status(status).json({ message: message });
     }
 })
 
 authRouter.post('/verify', async (req: Request, res: Response) => {
     const { token, email } = req.body
     try {
-        const user = await AuthService.verifyEmailToken(email, token)
+        await AuthService.verifyEmailToken(email, token)
         res.status(200).json({
-            message: "Usuário verificado com sucesso",
-            user
+            message: "Usuário verificado com sucesso"
         })
     } catch (error) {
         if (error instanceof Error) {
