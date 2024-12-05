@@ -10,7 +10,7 @@
     "dev": "nodemon src/server.ts",
     "lint": "eslint src/**/*.{js,ts}",
     "lint-fix": "eslint ./src .test --ext .ts --fix",
-    "build": "tsup src",
+    "build": "tsc",
     "start": "node dist/server.js"
   },
   "keywords": [],
