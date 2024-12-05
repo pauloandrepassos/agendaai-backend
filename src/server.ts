@@ -1,13 +1,13 @@
 import http from 'http'
 import app from './index'
-import { initializeDatabase } from './database/config'
+//import { initializeDatabase } from './database/config'
 
 (async () => {
     const PORT = process.env.PORT || 3001
 
     const server = http.createServer(app)
 
-    await initializeDatabase()
+    //await initializeDatabase()
 
     server.listen(PORT, () => {
         console.log("SERVER ONLINE")
