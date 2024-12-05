@@ -1,7 +1,8 @@
 import nodemailer, { Transporter, SendMailOptions } from 'nodemailer';
 import { generateEmailHtml } from './emailTemplate';
 
-const siteUrl = 'URL';
+//const siteUrl = 'http://localhost:3000';
+const siteUrl = 'https://agendaai.vercel.app';
 
 function createTransporter(): Transporter {
     const email = process.env.EMAIL;
