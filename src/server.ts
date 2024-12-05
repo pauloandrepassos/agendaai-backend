@@ -1,10 +1,20 @@
 import http from 'http'
 import app from './index'
-import AppDataSource from './database/config'
+import { initializeDatabase } from './database/config'
 
-const PORT = process.env.PORT || 3001
+(async () => {
+    const PORT = process.env.PORT || 3001
 
-const server = http.createServer(app)
+    const server = http.createServer(app)
+
+    await initializeDatabase()
+
+    server.listen(PORT, () => {
+        console.log("SERVER ONLINE")
+    })
+})()
+
+/*
 
 AppDataSource.initialize()
     .then(async () => {
@@ -15,3 +25,4 @@ AppDataSource.initialize()
         })
     })
     .catch((error) => console.log("Erro ao inicializar o Data Source:", error));
+*/

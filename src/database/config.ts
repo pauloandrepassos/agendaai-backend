@@ -18,3 +18,9 @@ const AppDataSource = new DataSource({
 });
  
 export default AppDataSource;
+
+export const initializeDatabase = async () => {
+  await AppDataSource.initialize()
+    .then(() => console.log("DATABASE INITIALIZED"))
+    .catch((error) => console.log("ERROR TO INITIALIZE DATABASE:", error));
+};
