@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "engines": {
-    "node": "20.12.2"
-  },
   "scripts": {
     "dev": "nodemon src/server.ts",
     "lint": "eslint src/**/*.{js,ts}",
