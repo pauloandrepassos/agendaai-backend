@@ -87,6 +87,10 @@ class AuthService {
             if (decodedToken.id !== pendingUser.id) {
                 throw new Error("Token inválido para o usuário fornecido.")
             }
+            const existingUser = await this.userRepository.findOne({ where: { email } });
+            if (existingUser) {
+                throw new Error("Já existe um usuário registrado com este email.");
+            }
 
             const newUser = this.userRepository.create({
                 name: pendingUser.name,
@@ -166,13 +170,13 @@ class AuthService {
             throw new Error("SECRET_KEY não está definido nas variáveis de ambiente")
         }
         try {
-            const decodedToken = jwt.verify(token, secretKey) as { email: string}
-            
+            const decodedToken = jwt.verify(token, secretKey) as { email: string }
+
             const user = await this.userRepository.findOne({
                 where: { email: decodedToken.email }
             })
 
-            if(!user) {
+            if (!user) {
                 throw new Error("Usuário não encontrado")
             }
 
