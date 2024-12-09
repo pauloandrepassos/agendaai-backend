@@ -52,6 +52,17 @@ class EstablishmentService {
         return establishment
     }
 
+    public async getEstablishmentByVendorId(vendorId: number) {
+        const establishment = await this.establishmentRepository.findOne({
+            where: { vendor: { id: vendorId } },
+            relations: ['address'],
+        });
+        if (!establishment) {
+            throw new Error("Estabelecimento não encontrado para o vendedor especificado");
+        }
+        return establishment;
+    }    
+
     public async updateEstablishment(id: number, updatedEstablishmentData: Partial<Establishment>, updatedAddressData: Partial<Address>) {
         const queryRunner = AppDataSource.createQueryRunner()
         await queryRunner.startTransaction()

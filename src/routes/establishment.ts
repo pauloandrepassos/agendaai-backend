@@ -3,6 +3,7 @@ import EstablishmentService from "../services/establishmentService"
 import { Router } from "express"
 import { validateEstablishmentRequest } from "../validators/validateEstablishmentRequest "
 import verifyToken from "../middlewares/authorization"
+import { UserRequest } from "../types/request"
 
 const establishmentRouter = Router()
 
@@ -37,6 +38,18 @@ establishmentRouter.get("/establishments", verifyToken(), async (req: Request, r
     } catch (error) {
         console.error(error)
         res.status(500).json({ message: "Erro ao listar estabelecimentos", error })
+    }
+})
+
+establishmentRouter.get("/establishments/by-vendor", verifyToken('vendor'), async (req: UserRequest, res: Response) => {
+    try {
+        const vendorId = req.userId
+        console.log(vendorId)
+        const establishment = await EstablishmentService.getEstablishmentByVendorId(Number(vendorId))
+        res.status(200).json(establishment)
+    } catch (error) {
+        console.error(error)
+        res.status(404).json({ message: "Estabelecimento não encontrado", error })
     }
 })
 
