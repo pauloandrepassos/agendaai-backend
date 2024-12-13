@@ -1,6 +1,7 @@
 import { Repository } from "typeorm";
 import AppDataSource from "../database/config";
 import { Product } from "../models/Product";
+import establishmentService from "./establishmentService";
 
 class ProductService {
     private productRepository: Repository<Product>;
@@ -18,6 +19,16 @@ class ProductService {
         return await this.productRepository.find({
             relations: ["establishment"],
         });
+    }
+
+    public async getAllEstablishmentProducts(vendorId: number) {
+        const establishment = await establishmentService.getEstablishmentByVendorId(vendorId)
+        const products = await this.productRepository.find({
+            where: {
+                establishment_id: establishment.id
+            }
+        })
+        return products
     }
 
     public async getProductById(id: number) {

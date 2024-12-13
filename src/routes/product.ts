@@ -30,6 +30,17 @@ productRouter.get("/products", verifyToken(), async (req: Request, res: Response
     }
 });
 
+productRouter.get("/products/by-vendor", verifyToken('vendor'), async (req: UserRequest, res: Response) => {
+    try {
+        const vendorId = req.userId
+        const products = await ProductService.getAllEstablishmentProducts(Number(vendorId))
+        res.status(200).json(products)
+    } catch (error) {
+        console.error(error)
+        res.status(404).json({message: "Erro ao buscar produtos"})
+    }
+})
+
 // Rota para buscar um produto por ID
 productRouter.get("/products/:id", verifyToken(), async (req: Request, res: Response) => {
     try {
