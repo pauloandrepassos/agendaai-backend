@@ -4,6 +4,7 @@ import { Establishment } from "./Establishment";
 export interface IProduct {
     id: number;
     name: string;
+    image: string
     description: string;
     price: number;
     establishment_id: number;
@@ -18,6 +19,9 @@ export class Product implements IProduct {
 
     @Column()
     name: string;
+
+    @Column()
+    image: string
 
     @Column()
     description: string;
