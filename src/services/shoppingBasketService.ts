@@ -166,6 +166,51 @@ class ShoppingBasketService {
             await queryRunner.release();
         }
     }
+    
+    // Remover item completo do cesto (todas as quantidades)
+    public async removeItemCompletelyFromBasket(userId: number, productId: number) {
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.startTransaction();
+    
+        try {
+            const shoppingBasket = await this.shoppingBasketRepository.findOne({
+                where: { user: userId },
+                relations: ["shoppingBasketItems", "shoppingBasketItems.product"],
+            });
+    
+            if (!shoppingBasket) throw new Error("Cesto de compras não encontrado");
+    
+            const shoppingBasketItem = shoppingBasket.shoppingBasketItems.find(
+                (item) => item.product.id === productId
+            );
+    
+            if (!shoppingBasketItem) throw new Error("Item não encontrado no cesto");
+    
+            shoppingBasket.shoppingBasketItems = shoppingBasket.shoppingBasketItems.filter(
+                (item) => item.product.id !== productId
+            );
+            await queryRunner.manager.remove(shoppingBasketItem);
+    
+            if (shoppingBasket.shoppingBasketItems.length === 0) {
+                await queryRunner.manager.remove(shoppingBasket);
+            } else {
+                shoppingBasket.total_price = shoppingBasket.shoppingBasketItems.reduce(
+                    (total, item) => total + item.product.price * item.quantity, 0
+                );
+                await queryRunner.manager.save(shoppingBasket);
+            }
+    
+            await queryRunner.commitTransaction();
+            return shoppingBasket;
+    
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw new Error("Erro ao remover item do carrinho: " + error);
+        } finally {
+            await queryRunner.release();
+        }
+    }
+    
 }
 
 export default new ShoppingBasketService();

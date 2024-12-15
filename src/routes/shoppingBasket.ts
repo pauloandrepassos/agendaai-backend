@@ -60,4 +60,21 @@ shoppingBasketRouter.delete("/shopping-basket/:id", verifyToken("client"), async
     }
 });
 
+// Rota para remover completamente um item do cesto de compras
+shoppingBasketRouter.delete("/shopping-basket/items/:productId/remove", verifyToken("client"), async (req: UserRequest, res: Response) => {
+    const { productId } = req.params;
+
+    try {
+        const shoppingBasket = await ShoppingBasketService.removeItemCompletelyFromBasket(
+            Number(req.userId),
+            Number(productId)
+        );
+        res.status(204).send();
+    } catch (error) {
+        if (error instanceof Error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+});
+
 export default shoppingBasketRouter;
