@@ -4,6 +4,7 @@ import authRouter from "./auth";
 import establishmentRouter from "./establishment";
 import establishmentRequestRouter from "./establishmentRequest";
 import operatingHoursRouter from "./operatingHours";
+import shoppingBasketRouter from "./shoppingBasket";
 import productRouter from "./product";
 
 const router = Router()
