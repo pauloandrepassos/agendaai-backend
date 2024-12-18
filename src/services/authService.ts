@@ -33,9 +33,14 @@ class AuthService {
     ): Promise<PendingUser | null> {
 
         try {
+            const hasPendingUser = await this.pendingUserRepository.findOne({ where: {email}})
+            if(hasPendingUser) {
+                await this.pendingUserRepository.remove(hasPendingUser)
+            }
 
-            const emailExists = await this.pendingUserRepository.findOne({ where: { email } })
-            const cpfExists = await this.pendingUserRepository.findOne({ where: { cpf } })
+
+            const emailExists = await this.userRepository.findOne({ where: { email } })
+            const cpfExists = await this.userRepository.findOne({ where: { cpf } })
 
             if (emailExists || cpfExists) {
                 throw new Error("Usuário com este email ou CPF já existe")
