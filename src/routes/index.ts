@@ -6,9 +6,10 @@ import establishmentRequestRouter from "./establishmentRequest";
 import operatingHoursRouter from "./operatingHours";
 import shoppingBasketRouter from "./shoppingBasket";
 import productRouter from "./product";
+import menuRouter from "./menu";
 
 const router = Router()
 
-router.use('/', userRouter, authRouter, establishmentRequestRouter, establishmentRouter,operatingHoursRouter, productRouter)
+router.use('/', userRouter, authRouter, establishmentRequestRouter, establishmentRouter,operatingHoursRouter, productRouter, menuRouter)
 
 export default router
