@@ -24,7 +24,7 @@ const productRouter = Router();
 // Rota para criar um novo produto
 productRouter.post("/products", verifyToken("vendor"), upload.single('image'), async (req: UserRequest, res: Response) => {
     try {
-        const { name, description, price } = req.body;
+        const { name, description, price, category } = req.body;
         const vendorId = req.userId
 
         const establishment = await establishmentService.getEstablishmentByVendorId(Number(vendorId))
@@ -40,7 +40,7 @@ productRouter.post("/products", verifyToken("vendor"), upload.single('image'), a
 
         const uploadResult = await cloudinaryService.uploadImage(filePath)
 
-        const productData = { name, description, price, establishment_id, image: uploadResult };
+        const productData = { name, description, price, category, establishment_id, image: uploadResult };
         const newProduct = await ProductService.newProduct(productData);
 
         fs.unlink(filePath, (err) => {
@@ -94,9 +94,9 @@ productRouter.get("/products/:id", verifyToken(), async (req: Request, res: Resp
 // Rota para atualizar um produto
 productRouter.put("/products/:id", verifyToken("vendor"), async (req: Request, res: Response) => {
     try {
-        const { name, description, price, establishment_id } = req.body;
+        const { name, description, price, category, establishment_id } = req.body;
 
-        const updatedData = { name, description, price, establishment_id };
+        const updatedData = { name, description, price, category, establishment_id };
         const updatedProduct = await ProductService.updateProduct(Number(req.params.id), updatedData);
 
         res.status(200).json(updatedProduct);
