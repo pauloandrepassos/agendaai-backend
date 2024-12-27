@@ -7,9 +7,11 @@ import operatingHoursRouter from "./operatingHours";
 import shoppingBasketRouter from "./shoppingBasket";
 import productRouter from "./product";
 import menuRouter from "./menu";
+import orderRoute from "./order";
 
 const router = Router()
 
-router.use('/', userRouter, authRouter, establishmentRequestRouter, establishmentRouter,operatingHoursRouter, productRouter, menuRouter)
+router.use('/', userRouter, authRouter, establishmentRequestRouter, establishmentRouter
+,operatingHoursRouter, productRouter, menuRouter,shoppingBasketRouter,orderRoute)
 
 export default router
