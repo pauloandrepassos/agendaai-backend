@@ -94,9 +94,18 @@ productRouter.get("/products/:id", verifyToken(), async (req: Request, res: Resp
 // Rota para atualizar um produto
 productRouter.put("/products/:id", verifyToken("vendor"), async (req: Request, res: Response) => {
     try {
-        const { name, description, price, category, establishment_id } = req.body;
+        const { name, description, price, category } = req.body;
 
-        const updatedData = { name, description, price, category, establishment_id };
+        if (!name || !description || !price || !category ) {
+            res.status(400).json({ message: "Todos os campos são obrigatórios." });
+            return
+        }
+        if (price <= 0) {
+            res.status(400).json({ message: "O preço deve ser maior que zero." });
+            return
+        }
+
+        const updatedData = { name, description, price, category };
         const updatedProduct = await ProductService.updateProduct(Number(req.params.id), updatedData);
 
         res.status(200).json(updatedProduct);
