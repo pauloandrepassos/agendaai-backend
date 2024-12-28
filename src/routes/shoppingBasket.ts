@@ -17,7 +17,7 @@ shoppingBasketRouter.get("/shopping-basket/items", verifyToken("client"), async 
 });
 
 // Rota para adicionar itens ao cesto de compras
-shoppingBasketRouter.post("/shopping-basket/items", verifyToken("vendor"), async (req: UserRequest, res: Response) => {
+shoppingBasketRouter.post("/shopping-basket/items", verifyToken("client"), async (req: UserRequest, res: Response) => {
     const { establishmentId, productId, quantity } = req.body;
 
     try {
