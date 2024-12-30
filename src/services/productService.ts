@@ -56,6 +56,14 @@ class ProductService {
             throw new Error("Produto não encontrado");
         return await this.productRepository.remove(product);
     }
+
+    public async verifyProductById(id: number) {
+        const product = await this.productRepository.findOne({
+            where: { id },
+            relations: ["establishment"],
+        });
+        return product;
+    }
 }
 
 export default new ProductService();

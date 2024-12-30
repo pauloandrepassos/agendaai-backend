@@ -6,9 +6,9 @@ import { UserRequest } from "../types/request";
 const menuRouter = Router();
 
 // Endpoint para adicionar itens ao cardápio
-menuRouter.post("/add-items", verifyToken(""), async (req: UserRequest, res: Response) => {
+menuRouter.post("/menu/add-items", verifyToken(""), async (req: UserRequest, res: Response) => {
     try {
-        const { itemIds, date } = req.body;
+        const { itemIds, day } = req.body;
         const vendorId = req.userId;
 
         if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
@@ -16,12 +16,12 @@ menuRouter.post("/add-items", verifyToken(""), async (req: UserRequest, res: Res
             return;
         }
 
-        if (!date) {
+        if (!day) {
             res.status(400).json({ error: "A data do cardápio é obrigatória." });
             return;
         }
 
-        const updatedMenu = await menuService.addMenuItem(Number(vendorId), new Date(date), itemIds);
+        const updatedMenu = await menuService.addMenuItem(Number(vendorId), day, itemIds);
 
         res.status(200).json({
             message: "Itens adicionados ao cardápio com sucesso.",
@@ -64,10 +64,7 @@ menuRouter.get("/menu/establishment/:id", verifyToken(""), async (req: Request, 
             return;
         }
 
-        res.status(200).json({
-            message: "Cardápio listado com sucesso.",
-            menu,
-        });
+        res.status(200).json(menu);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erro ao listar o cardápio" });
@@ -84,10 +81,7 @@ menuRouter.get("/menu/establishment/", verifyToken(""), async (req: UserRequest,
             return;
         }
 
-        res.status(200).json({
-            message: "Cardápio listado com sucesso.",
-            menu,
-        });
+        res.status(200).json(menu);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erro ao listar o cardápio" });

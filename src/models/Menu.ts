@@ -10,11 +10,12 @@ import {
 } from "typeorm";
 import { Establishment } from "./Establishment";
 import { MenuItem } from "./MenuItem";
+import { Day } from "./OperatingHours";
 
 export interface IMenu {
     id: number;
     establishment_id: number;
-    date: Date; 
+    day: Day
     created_at: Date;
     updated_at: Date;
     menuItems?: MenuItem[]; 
@@ -28,8 +29,11 @@ export class Menu implements IMenu {
     @Column()
     establishment_id: number;
 
-    @Column({ type: "date" })
-    date: Date;
+    @Column({
+        type: "enum",
+        enum: Day
+    })
+    day: Day
 
     @ManyToOne(() => Establishment, (establishment) => establishment.id, {
         onDelete: "CASCADE",
@@ -38,6 +42,7 @@ export class Menu implements IMenu {
     establishment: Establishment;
 
     @OneToMany(() => MenuItem, (menuItem) => menuItem.menu, {
+        eager: true,
         cascade: true,
     })
     menuItems: MenuItem[];

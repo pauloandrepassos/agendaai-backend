@@ -4,6 +4,7 @@ import { Menu } from "../models/Menu";
 import { MenuItem } from "../models/MenuItem";
 import productService from "./productService";
 import establishmentService from "./establishmentService";
+import { Day } from "../models/OperatingHours";
 
 class MenuService {
     private menuRepository: Repository<Menu>;
@@ -14,7 +15,7 @@ class MenuService {
         this.menuItemRepository = AppDataSource.getRepository(MenuItem);
     }
 
-    public async addMenuItem(userId: number, date: Date, itemIds: number[]) {
+    public async addMenuItem(userId: number, day: Day, itemIds: number[]) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
 
@@ -24,35 +25,40 @@ class MenuService {
                 throw new Error("Estabelecimento não encontrado.");
             }
 
-            let menu = await this.menuRepository.findOne({
-                where: { establishment_id: establishment.id, date },
+            let menu = await queryRunner.manager.findOne(Menu, {
+                where: { establishment_id: establishment.id, day },
                 relations: ["menuItems"],
             });
 
             if (!menu) {
                 menu = this.menuRepository.create({
-                    date,
+                    day,
                     establishment_id: establishment.id,
                 });
                 menu = await queryRunner.manager.save(menu);
             }
 
-            const existingMenuItemIds = menu.menuItems.map((menuItem) => menuItem.product_id);
+            const existingMenuItemIds = (menu.menuItems || []).map((menuItem) => menuItem.product_id);
             const newItems = itemIds.filter((itemId) => !existingMenuItemIds.includes(itemId));
 
             if (newItems.length === 0) {
+                await queryRunner.commitTransaction();
                 return menu;
             }
 
-            const validProducts = await Promise.all(
-                newItems.map(async (itemId) => {
-                    const product = await productService.getProductById(itemId);
-                    if (!product) {
-                        throw new Error(`Produto com ID ${itemId} não encontrado.`);
-                    }
-                    return product;
-                })
-            );
+            const validProducts = (
+                await Promise.all(
+                    newItems.map(async (itemId) => {
+                        const product = await productService.verifyProductById(itemId);
+                        if (product) {
+                            return product;
+                        } else {
+                            console.log(`Produto com ID ${itemId} não encontrado. Ignorando.`)
+                            return null;
+                        }
+                    })
+                )
+            ).filter((product) => product !== null)
 
             const menuItems = validProducts.map((product) =>
                 this.menuItemRepository.create({
@@ -63,7 +69,7 @@ class MenuService {
 
             await queryRunner.manager.save(menuItems);
 
-            const updatedMenu = await this.menuRepository.findOne({
+            const updatedMenu = await queryRunner.manager.findOne(Menu, {
                 where: { id: menu.id },
                 relations: ["menuItems"],
             });
@@ -73,7 +79,8 @@ class MenuService {
 
         } catch (error) {
             await queryRunner.rollbackTransaction();
-            throw new Error("Erro ao adicionar itens ao cardápio: " + error);
+            console.error(error); // Log detalhado para ajudar na depuração
+            throw new Error("Erro ao adicionar itens ao cardápio");
         } finally {
             await queryRunner.release();
         }
@@ -124,30 +131,36 @@ class MenuService {
             throw new Error("Estabelecimento não encontrado para o vendedor especificado.");
         }
 
-        const menu = await this.menuRepository.findOne({
-            where: { establishment_id: establishment.id },
-            relations: ["menuItems", "menuItems.product"],
-        });
-
-        if (!menu) {
-            throw new Error("Cardápio não encontrado para o estabelecimento do vendedor.");
-        }
+        const menu = await this.getMenuByEstablishmentId(establishment.id)
 
         return menu;
     }
 
     public async getMenuByEstablishmentId(establishmentId: number) {
-        const menu = await this.menuRepository.findOne({
+        const menus = await this.menuRepository.find({
             where: { establishment_id: establishmentId },
-            relations: ["menuItems", "menuItems.product"],
+            relations: ["menuItems.product"],
         });
-
-        if (!menu) {
-            return null;
+    
+        if (!menus.length) {
+            return [];
         }
 
-        return menu;
-    }
+        const formattedMenus = menus.map((menu) => ({
+            id: menu.id,
+            establishment_id: menu.establishment_id,
+            day: menu.day,
+            menuItems: menu.menuItems.map((menuItem) => ({
+                id: menuItem.product.id,
+                name: menuItem.product.name,
+                image: menuItem.product.image,
+                price: menuItem.product.price,
+                category: menuItem.product.category,
+            })),
+        }));
+    
+        return formattedMenus;
+    }    
 }
 
 export default new MenuService();
