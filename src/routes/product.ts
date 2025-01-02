@@ -23,10 +23,10 @@ const upload = multer({
 const productRouter = Router();
 
 // Rota para criar um novo produto
-productRouter.post("/products", async (req: UserRequest, res: Response) => {
+productRouter.post("/products", verifyToken("vendor"), upload.single('image'), async (req: UserRequest, res: Response) => {
     try {
         const { name, description, price, category } = req.body;
-        const vendorId = 1;
+        const vendorId = req.userId;
 
         const establishment = await establishmentService.getEstablishmentByVendorId(Number(vendorId));
         if (!establishment) {
@@ -35,13 +35,25 @@ productRouter.post("/products", async (req: UserRequest, res: Response) => {
 
         const establishment_id = establishment.id;
 
-       
-        const uploadResult = "/"
+        if (!req.file) {
+            throw new CustomError('Arquivo de imagem não encontrado', 400, 'IMAGE_NOT_FOUND');
+        }
+
+        const filePath = path.resolve(req.file.path);
+
+        const uploadResult = await cloudinaryService.uploadImage(filePath);
 
         const productData = { name, description, price, category, establishment_id, image: uploadResult };
         const newProduct = await ProductService.newProduct(productData);
 
-       
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error("Erro ao excluir o arquivo local:", err);
+            } else {
+                console.log("Arquivo local excluído com sucesso");
+            }
+        });
+
         res.status(201).json(newProduct);
     } catch (error) {
         if (error instanceof CustomError) {
