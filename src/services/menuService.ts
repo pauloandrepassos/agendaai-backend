@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import AppDataSource from "../database/config";
 import { Menu } from "../models/Menu";
 import { MenuItem } from "../models/MenuItem";
@@ -18,18 +18,19 @@ class MenuService {
     public async addMenuItem(userId: number, day: Day, itemIds: number[]) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
-
+    
         try {
             const establishment = await establishmentService.getEstablishmentByVendorId(userId);
             if (!establishment) {
                 throw new Error("Estabelecimento não encontrado.");
             }
-
+    
+            // Busca o menu existente ou cria um novo
             let menu = await queryRunner.manager.findOne(Menu, {
                 where: { establishment_id: establishment.id, day },
                 relations: ["menuItems"],
             });
-
+    
             if (!menu) {
                 menu = this.menuRepository.create({
                     day,
@@ -37,54 +38,64 @@ class MenuService {
                 });
                 menu = await queryRunner.manager.save(menu);
             }
-
-            const existingMenuItemIds = (menu.menuItems || []).map((menuItem) => menuItem.product_id);
-            const newItems = itemIds.filter((itemId) => !existingMenuItemIds.includes(itemId));
-
-            if (newItems.length === 0) {
-                await queryRunner.commitTransaction();
-                return menu;
-            }
-
+    
+            // Produtos válidos recebidos na requisição
             const validProducts = (
                 await Promise.all(
-                    newItems.map(async (itemId) => {
+                    itemIds.map(async (itemId) => {
                         const product = await productService.verifyProductById(itemId);
-                        if (product) {
-                            return product;
-                        } else {
-                            console.log(`Produto com ID ${itemId} não encontrado. Ignorando.`)
-                            return null;
-                        }
+                        if (product) return product;
+                        console.log(`Produto com ID ${itemId} não encontrado. Ignorando.`);
+                        return null;
                     })
                 )
-            ).filter((product) => product !== null)
-
-            const menuItems = validProducts.map((product) =>
-                this.menuItemRepository.create({
+            ).filter((product) => product !== null);
+    
+            // IDs dos produtos válidos
+            const validProductIds = validProducts.map((product) => product.id);
+    
+            // IDs dos itens atualmente no menu
+            const existingMenuItemIds = (menu.menuItems || []).map((menuItem) => menuItem.product_id);
+    
+            // Determina os itens a adicionar e a remover
+            const itemsToAdd = validProductIds.filter((id) => !existingMenuItemIds.includes(id));
+            const itemsToRemove = existingMenuItemIds.filter((id) => !validProductIds.includes(id));
+    
+            // Remove itens que não estão na lista recebida
+            if (itemsToRemove.length > 0) {
+                await queryRunner.manager.delete(MenuItem, {
                     menu_id: menu.id,
-                    product_id: product.id,
-                })
-            );
-
-            await queryRunner.manager.save(menuItems);
-
+                    product_id: In(itemsToRemove),
+                });
+            }
+    
+            // Adiciona novos itens
+            if (itemsToAdd.length > 0) {
+                const menuItems = itemsToAdd.map((productId) =>
+                    this.menuItemRepository.create({
+                        menu_id: menu.id,
+                        product_id: productId,
+                    })
+                );
+                await queryRunner.manager.save(menuItems);
+            }
+    
+            // Busca o menu atualizado
             const updatedMenu = await queryRunner.manager.findOne(Menu, {
                 where: { id: menu.id },
-                relations: ["menuItems"],
+                relations: ["menuItems.product"],
             });
-
+    
             await queryRunner.commitTransaction();
             return updatedMenu;
-
         } catch (error) {
             await queryRunner.rollbackTransaction();
-            console.error(error); // Log detalhado para ajudar na depuração
-            throw new Error("Erro ao adicionar itens ao cardápio");
+            console.error(error);
+            throw new Error("Erro ao atualizar o cardápio");
         } finally {
             await queryRunner.release();
         }
-    }
+    }    
 
     public async removeMenuItemByVendor(vendorId: number, itemId: number): Promise<boolean> {
         const queryRunner = AppDataSource.createQueryRunner();

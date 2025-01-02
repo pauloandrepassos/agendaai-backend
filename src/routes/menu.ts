@@ -11,11 +11,6 @@ menuRouter.post("/menu/add-items", verifyToken(""), async (req: UserRequest, res
         const { itemIds, day } = req.body;
         const vendorId = req.userId;
 
-        if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
-            res.status(400).json({ error: "IDs de itens são obrigatórios." });
-            return;
-        }
-
         if (!day) {
             res.status(400).json({ error: "A data do cardápio é obrigatória." });
             return;
