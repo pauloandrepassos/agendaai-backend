@@ -2,6 +2,7 @@ import { Repository } from "typeorm";
 import AppDataSource from "../database/config";
 import { Product } from "../models/Product";
 import establishmentService from "./establishmentService";
+import CustomError from "../utils/CustomError";
 
 class ProductService {
     private productRepository: Repository<Product>;
@@ -22,13 +23,17 @@ class ProductService {
     }
 
     public async getAllEstablishmentProducts(vendorId: number) {
-        const establishment = await establishmentService.getEstablishmentByVendorId(vendorId)
+        const establishment = await establishmentService.getEstablishmentByVendorId(vendorId);
+        if (!establishment) {
+            throw new CustomError("Estabelecimento não encontrado", 404, "ESTABLISHMENT_NOT_FOUND");
+        }
+
         const products = await this.productRepository.find({
             where: {
-                establishment_id: establishment.id
-            }
-        })
-        return products
+                establishment_id: establishment.id,
+            },
+        });
+        return products;
     }
 
     public async getProductById(id: number) {
@@ -36,15 +41,17 @@ class ProductService {
             where: { id },
             relations: ["establishment"],
         });
-        if (!product) 
-            throw new Error("Produto não encontrado");
+        if (!product) {
+            throw new CustomError("Produto não encontrado", 404, "PRODUCT_NOT_FOUND");
+        }
         return product;
     }
 
     public async updateProduct(id: number, updatedData: Partial<Product>) {
         const product = await this.getProductById(id);
-        if (!product) 
-            throw new Error("Produto não encontrado");
+        if (!product) {
+            throw new CustomError("Produto não encontrado", 404, "PRODUCT_NOT_FOUND");
+        }
 
         Object.assign(product, updatedData);
         return await this.productRepository.save(product);
@@ -52,8 +59,9 @@ class ProductService {
 
     public async deleteProduct(id: number) {
         const product = await this.getProductById(id);
-        if (!product) 
-            throw new Error("Produto não encontrado");
+        if (!product) {
+            throw new CustomError("Produto não encontrado", 404, "PRODUCT_NOT_FOUND");
+        }
         return await this.productRepository.remove(product);
     }
 
@@ -62,6 +70,9 @@ class ProductService {
             where: { id },
             relations: ["establishment"],
         });
+        if (!product) {
+            throw new CustomError("Produto não encontrado", 404, "PRODUCT_NOT_FOUND");
+        }
         return product;
     }
 }
