@@ -102,7 +102,8 @@ class AuthService {
 
             return newUser;
         } catch (error) {
-            if (error instanceof jwt.TokenExpiredError) {
+            if(error instanceof CustomError) throw error
+            else if (error instanceof jwt.TokenExpiredError) {
                 throw new CustomError("Token expirado.", 400, "TOKEN_EXPIRED");
             } else if (error instanceof jwt.JsonWebTokenError) {
                 throw new CustomError("Token inválido.", 400, "INVALID_TOKEN");
@@ -172,7 +173,8 @@ class AuthService {
             await this.userRepository.save(user);
 
         } catch (error) {
-            if (error instanceof jwt.TokenExpiredError) {
+            if(error instanceof CustomError) throw error
+            else if (error instanceof jwt.TokenExpiredError) {
                 throw new CustomError("Token expirado.", 400, "TOKEN_EXPIRED");
             } else if (error instanceof jwt.JsonWebTokenError) {
                 throw new CustomError("Token inválido.", 400, "INVALID_TOKEN");

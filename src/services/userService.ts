@@ -18,6 +18,7 @@ class UserService {
             return users;
         } catch (error) {
             console.error("Erro ao buscar todos os usuários:", error);
+            if(error instanceof CustomError) throw error
             throw new CustomError("Erro ao buscar todos os usuários.", 500, "GET_ALL_USERS_ERROR");
         }
     }
@@ -31,6 +32,7 @@ class UserService {
             return user;
         } catch (error) {
             console.error("Erro ao buscar usuário por ID:", error);
+            if(error instanceof CustomError) throw error
             throw new CustomError("Erro ao buscar usuário por ID.", 500, "GET_USER_BY_ID_ERROR");
         }
     }
@@ -43,7 +45,7 @@ class UserService {
             }
             return user;
         } catch (error) {
-            console.error("Erro ao buscar usuário por email:", error);
+            if(error instanceof CustomError) throw error
             throw new CustomError("Erro ao buscar usuário por email.", 500, "GET_USER_BY_EMAIL_ERROR");
         }
     }
@@ -56,6 +58,7 @@ class UserService {
             return updatedUser;
         } catch (error) {
             console.error("Erro ao atualizar usuário:", error);
+            if(error instanceof CustomError) throw error
             throw new CustomError("Erro ao atualizar usuário.", 500, "UPDATE_USER_ERROR");
         }
     }
@@ -68,6 +71,7 @@ class UserService {
             return updatedUser;
         } catch (error) {
             console.error("Erro ao atualizar imagem do usuário:", error);
+            if(error instanceof CustomError) throw error
             throw new CustomError("Erro ao atualizar imagem do usuário.", 500, "UPDATE_USER_IMAGE_ERROR");
         }
     }
