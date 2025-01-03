@@ -2,6 +2,7 @@ import { UserRequest } from "../types/request";
 import { Response, Router } from "express";
 import ShoppingBasketService from "../services/shoppingBasketService";
 import verifyToken from "../middlewares/authorization";
+import CustomError from "../utils/CustomError";
 
 const shoppingBasketRouter = Router();
 
@@ -11,8 +12,12 @@ shoppingBasketRouter.get("/shopping-basket/items", verifyToken("client"), async 
         const shoppingBasket = await ShoppingBasketService.getShoppingBasketWithItems(Number(req.userId));
         res.status(200).json(shoppingBasket);
     } catch (error) {
-        if(error instanceof Error)
-            res.status(400).json({ message: error.message });
+        if (error instanceof CustomError) {
+            res.status(error.statusCode).json({ message: error.message, code: error.errorCode });
+            return;
+        }
+        console.error(error);
+        res.status(500).json({ message: "Erro ao obter cesto de compras", error });
     }
 });
 
@@ -29,8 +34,12 @@ shoppingBasketRouter.post("/shopping-basket/items", verifyToken("client"), async
         );
         res.status(201).json(shoppingBasket);
     } catch (error) {
-        if(error instanceof Error)
-            res.status(400).json({ message: error.message });
+        if (error instanceof CustomError) {
+            res.status(error.statusCode).json({ message: error.message, code: error.errorCode });
+            return;
+        }
+        console.error(error);
+        res.status(500).json({ message: "Erro ao adicionar item ao cesto de compras", error });
     }
 });
 
@@ -45,8 +54,12 @@ shoppingBasketRouter.delete("/shopping-basket/items/:id", verifyToken("client"),
         );
         res.status(204).send();
     } catch (error) {
-        if(error instanceof Error)
-            res.status(400).json({ message: error.message });
+        if (error instanceof CustomError) {
+            res.status(error.statusCode).json({ message: error.message, code: error.errorCode });
+            return;
+        }
+        console.error(error);
+        res.status(500).json({ message: "Erro ao remover item do cesto de compras", error });
     }
 });
 
@@ -55,8 +68,13 @@ shoppingBasketRouter.delete("/shopping-basket/:id", verifyToken("client"), async
     try {
         await ShoppingBasketService.removeBasket(Number(req.userId));
         res.status(204).send();
-    } catch (error: any) {
-        res.status(400).json({ error: error.message });
+    } catch (error) {
+        if (error instanceof CustomError) {
+            res.status(error.statusCode).json({ message: error.message, code: error.errorCode });
+            return;
+        }
+        console.error(error);
+        res.status(500).json({ message: "Erro ao remover cesto de compras", error });
     }
 });
 
@@ -71,9 +89,12 @@ shoppingBasketRouter.delete("/shopping-basket/items/:productId/remove", verifyTo
         );
         res.status(204).send();
     } catch (error) {
-        if (error instanceof Error) {
-            res.status(400).json({ message: error.message });
+        if (error instanceof CustomError) {
+            res.status(error.statusCode).json({ message: error.message, code: error.errorCode });
+            return;
         }
+        console.error(error);
+        res.status(500).json({ message: "Erro ao remover item do cesto de compras", error });
     }
 });
 
