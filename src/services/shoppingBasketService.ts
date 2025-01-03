@@ -3,6 +3,7 @@ import AppDataSource from "../database/config";
 import { ShoppingBasket } from "../models/ShoppingBasket";
 import { ShoppingBasketItem } from "../models/ShoppingBasketItem";
 import productService from "./productService";
+import CustomError from "../utils/CustomError";
 
 class ShoppingBasketService {
     private shoppingBasketRepository: Repository<ShoppingBasket>;
@@ -13,22 +14,17 @@ class ShoppingBasketService {
         this.shoppingBasketItemRepository = AppDataSource.getRepository(ShoppingBasketItem);
     }
 
-    // Buscar cesto de compras pelo usuário
     public async getShoppingBasketWithItems(userId: number) {
         const shoppingBasket = await this.shoppingBasketRepository.findOne({
             where: { user: userId },
             relations: ["shoppingBasketItems", "shoppingBasketItems.product"],
         });
 
-        if (!shoppingBasket) throw new Error("Carrinho de compras não encontrado");
-         
-        shoppingBasket.shoppingBasketItems.map((info)=>{
-            console.log("nome",info.product.name)
-        })
+        if (!shoppingBasket) throw new CustomError("Carrinho de compras não encontrado", 404, "BASKET_NOT_FOUND");
+
         return shoppingBasket;
     }
 
-    // Adicionar item ao cesto
     public async addItemToBasket(userId: number, establishmentId: number, productId: number, quantity: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
@@ -44,13 +40,13 @@ class ShoppingBasketService {
                     user: userId,
                     establishment: establishmentId,
                     total_price: 0,
-                    shoppingBasketItems:[]
+                    shoppingBasketItems: []
                 });
                 shoppingBasket = await queryRunner.manager.save(shoppingBasket);
             }
 
             const product = await productService.getProductById(productId);
-            if (!product) throw new Error("Produto não encontrado");
+            if (!product) throw new CustomError("Produto não encontrado", 404, "PRODUCT_NOT_FOUND");
 
             const existingItem = shoppingBasket.shoppingBasketItems.find(
                 (item) => item.product.id === productId
@@ -79,13 +75,12 @@ class ShoppingBasketService {
 
         } catch (error) {
             await queryRunner.rollbackTransaction();
-            throw new Error("Erro ao adicionar item ao carrinho: " + error);
+            throw new CustomError("Erro ao adicionar item ao carrinho", 500, "ADD_ITEM_ERROR", error);
         } finally {
             await queryRunner.release();
         }
     }
 
-    // Remover item do cesto
     public async removeItemFromBasket(userId: number, itemId: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
@@ -96,13 +91,13 @@ class ShoppingBasketService {
                 relations: ["shoppingBasketItems", "shoppingBasketItems.product"],
             });
 
-            if (!shoppingBasket) throw new Error("Cesto de compras não encontrado");
+            if (!shoppingBasket) throw new CustomError("Carrinho de compras não encontrado", 404, "BASKET_NOT_FOUND");
 
             const shoppingBasketItem = shoppingBasket.shoppingBasketItems.find(
                 (item) => item.id === itemId
             );
 
-            if (!shoppingBasketItem) throw new Error("Item não encontrado no cesto");
+            if (!shoppingBasketItem) throw new CustomError("Item não encontrado no carrinho", 404, "ITEM_NOT_FOUND");
 
             if (shoppingBasketItem.quantity > 1) {
                 shoppingBasketItem.quantity -= 1;
@@ -117,7 +112,7 @@ class ShoppingBasketService {
             if (shoppingBasket.shoppingBasketItems.length === 0) {
                 await queryRunner.manager.remove(shoppingBasket);
                 await queryRunner.commitTransaction();
-                return { message: "Cesto de compras removido" };
+                return { message: "Carrinho removido" };
             }
 
             shoppingBasket.total_price = shoppingBasket.shoppingBasketItems.reduce(
@@ -130,13 +125,12 @@ class ShoppingBasketService {
 
         } catch (error) {
             await queryRunner.rollbackTransaction();
-            throw new Error("Erro ao remover item do carrinho: " + error);
+            throw new CustomError("Erro ao remover item do carrinho", 500, "REMOVE_ITEM_ERROR", error);
         } finally {
             await queryRunner.release();
         }
     }
 
-    // Remover o cesto de compras
     public async removeBasket(userId: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
@@ -147,50 +141,45 @@ class ShoppingBasketService {
                 relations: ["shoppingBasketItems"],
             });
 
-            if (!shoppingBasket) throw new Error("Cesto de compras não encontrado");
+            if (!shoppingBasket) throw new CustomError("Carrinho de compras não encontrado", 404, "BASKET_NOT_FOUND");
 
-            const removedItems = await queryRunner.manager.remove(shoppingBasket.shoppingBasketItems);
+            await queryRunner.manager.remove(shoppingBasket.shoppingBasketItems);
+            await queryRunner.manager.remove(shoppingBasket);
 
-            if (removedItems.length > 0) {
-                await queryRunner.manager.remove(shoppingBasket);
-                await queryRunner.commitTransaction();
-                return { message: "Cesto de compras e itens removidos com sucesso" };
-            }
-
-            throw new Error("Falha ao remover itens do cesto");
+            await queryRunner.commitTransaction();
+            return { message: "Carrinho removido com sucesso" };
 
         } catch (error) {
             await queryRunner.rollbackTransaction();
-            throw new Error("Erro ao remover cesto de compras: " + error);
+            throw new CustomError("Erro ao remover carrinho de compras", 500, "REMOVE_BASKET_ERROR", error);
         } finally {
             await queryRunner.release();
         }
     }
-    
-    // Remover item completo do cesto (todas as quantidades)
+
     public async removeItemCompletelyFromBasket(userId: number, productId: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
-    
+
         try {
             const shoppingBasket = await this.shoppingBasketRepository.findOne({
                 where: { user: userId },
                 relations: ["shoppingBasketItems", "shoppingBasketItems.product"],
             });
-    
-            if (!shoppingBasket) throw new Error("Cesto de compras não encontrado");
-    
+
+            if (!shoppingBasket) throw new CustomError("Carrinho de compras não encontrado", 404, "BASKET_NOT_FOUND");
+
             const shoppingBasketItem = shoppingBasket.shoppingBasketItems.find(
                 (item) => item.product.id === productId
             );
-    
-            if (!shoppingBasketItem) throw new Error("Item não encontrado no cesto");
-    
+
+            if (!shoppingBasketItem) throw new CustomError("Item não encontrado no carrinho", 404, "ITEM_NOT_FOUND");
+
             shoppingBasket.shoppingBasketItems = shoppingBasket.shoppingBasketItems.filter(
                 (item) => item.product.id !== productId
             );
             await queryRunner.manager.remove(shoppingBasketItem);
-    
+
             if (shoppingBasket.shoppingBasketItems.length === 0) {
                 await queryRunner.manager.remove(shoppingBasket);
             } else {
@@ -199,18 +188,17 @@ class ShoppingBasketService {
                 );
                 await queryRunner.manager.save(shoppingBasket);
             }
-    
+
             await queryRunner.commitTransaction();
             return shoppingBasket;
-    
+
         } catch (error) {
             await queryRunner.rollbackTransaction();
-            throw new Error("Erro ao remover item do carrinho: " + error);
+            throw new CustomError("Erro ao remover item do carrinho", 500, "REMOVE_ITEM_ERROR", error);
         } finally {
             await queryRunner.release();
         }
     }
-    
 }
 
 export default new ShoppingBasketService();

@@ -1,16 +1,17 @@
 import { EstablishmentRequest, RequestStatus } from "../models/EstablishmentRequest";
 import AppDataSource from "../database/config";
 import { Repository } from "typeorm";
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 import { sendRegistrationCompletionEmail } from "../utils/emails";
 import userService from "./userService";
 import establishmentService from "./establishmentService";
+import CustomError from "../utils/CustomError";
 
 class EstablishmentRequestService {
-    private establishmentRequest: Repository<EstablishmentRequest>
+    private establishmentRequest: Repository<EstablishmentRequest>;
 
     constructor() {
-        this.establishmentRequest = AppDataSource.getRepository(EstablishmentRequest)
+        this.establishmentRequest = AppDataSource.getRepository(EstablishmentRequest);
     }
 
     public async getAll() {
@@ -20,78 +21,85 @@ class EstablishmentRequestService {
     public async getById(id: number) {
         const establishmentRequest = await this.establishmentRequest.findOne({
             where: { id },
-            relations: ['vendor']
-        })
+            relations: ["vendor"],
+        });
         if (!establishmentRequest) {
-            return
+            throw new CustomError("Solicitação não encontrada", 404, "REQUEST_NOT_FOUND");
         }
-        return establishmentRequest
+        return establishmentRequest;
     }
 
     public async getByVendorId(id: number) {
         const establishmentRequest = await this.establishmentRequest.findOne({
-            where: { vendor_id: id}
-        })
+            where: { vendor_id: id },
+        });
         if (!establishmentRequest) {
-            return null
+            throw new CustomError("Solicitação não encontrada para o vendedor", 404, "REQUEST_NOT_FOUND");
         }
-        return establishmentRequest
+        return establishmentRequest;
     }
 
     public async create(establishmentRequestData: Partial<EstablishmentRequest>) {
-        const establishmentRequest = this.establishmentRequest.create(establishmentRequestData)
-        return await this.establishmentRequest.save(establishmentRequest)
+        const establishmentRequest = this.establishmentRequest.create(establishmentRequestData);
+        return await this.establishmentRequest.save(establishmentRequest);
     }
 
     public async approveRequest(id: number) {
-        console.log(`ID: ${id}`)
         const establishmentRequest = await this.establishmentRequest.findOne({
             where: { id },
-            relations: ['vendor']
-        })
+            relations: ["vendor"],
+        });
 
         if (!establishmentRequest) {
-            throw new Error("Solicitação não encontrada")
+            throw new CustomError("Solicitação não encontrada", 404, "REQUEST_NOT_FOUND");
         }
 
-        const secretKey = process.env.SECRET_KEY
+        const secretKey = process.env.SECRET_KEY;
 
         if (!secretKey) {
-            throw new Error("SECRET_KEY is not defined in environment variables")
+            throw new CustomError("SECRET_KEY não definida nas variáveis de ambiente", 500, "CONFIG_ERROR");
         }
 
-        const token = jwt.sign({ id: establishmentRequest.id, email: establishmentRequest.vendor.email }, secretKey)
+        const token = jwt.sign(
+            { id: establishmentRequest.id, email: establishmentRequest.vendor.email },
+            secretKey
+        );
 
-        sendRegistrationCompletionEmail(establishmentRequest.vendor.email, token)
+        sendRegistrationCompletionEmail(establishmentRequest.vendor.email, token);
 
-        console.log(`esse é o token: ${token}`)
-
-        establishmentRequest.status = RequestStatus.APPROVED
-        return await this.establishmentRequest.save(establishmentRequest)
+        establishmentRequest.status = RequestStatus.APPROVED;
+        return await this.establishmentRequest.save(establishmentRequest);
     }
 
-    public async CompleteRegistration(token: string, email: string) {
-        const secretKey = process.env.SECRET_KEY
+    public async completeRegistration(token: string, email: string) {
+        const secretKey = process.env.SECRET_KEY;
+
         if (!secretKey) {
-            throw new Error("SECRET_KEY não está definido nas variáveis de ambiente")
+            throw new CustomError("SECRET_KEY não está definida nas variáveis de ambiente", 500, "CONFIG_ERROR");
         }
 
-        const decodedToken = jwt.verify(token, secretKey) as { id: number, email: string }
+        let decodedToken;
+        try {
+            decodedToken = jwt.verify(token, secretKey) as { id: number; email: string };
+        } catch (error) {
+            throw new CustomError("Token inválido ou expirado", 400, "INVALID_TOKEN");
+        }
+
         if (decodedToken.email !== email) {
-            throw new Error("Token inválido ou não corresponde ao email fornecido")
+            throw new CustomError("Token não corresponde ao email fornecido", 400, "TOKEN_MISMATCH");
         }
 
-        const user = await userService.getUserByEmail(email)
+        const user = await userService.getUserByEmail(email);
         if (!user) {
-            throw new Error("Usuário não encontrado")
-        }
-        const establishmentRequest = await this.establishmentRequest.findOne({
-            where: { id: decodedToken.id }
-        })
-        if (!establishmentRequest) {
-            throw new Error("Solicitação não encontrada")
+            throw new CustomError("Usuário não encontrado", 404, "USER_NOT_FOUND");
         }
 
+        const establishmentRequest = await this.establishmentRequest.findOne({
+            where: { id: decodedToken.id },
+        });
+        if (!establishmentRequest) {
+            throw new CustomError("Solicitação não encontrada", 404, "REQUEST_NOT_FOUND");
+        }
 
         const establishmentData = {
             name: establishmentRequest.name,
@@ -99,7 +107,7 @@ class EstablishmentRequestService {
             background_image: establishmentRequest.background_image,
             cnpj: establishmentRequest.cnpj,
             vendor_id: establishmentRequest.vendor_id,
-        }
+        };
 
         const addressData = {
             zip_code: establishmentRequest.zip_code,
@@ -110,15 +118,14 @@ class EstablishmentRequestService {
             number: establishmentRequest.number,
             complement: establishmentRequest.complement,
             reference_point: establishmentRequest.reference_point,
-        }
+        };
 
-        const newEstablishment = await establishmentService.newEstablishment(establishmentData, addressData)
+        const newEstablishment = await establishmentService.newEstablishment(establishmentData, addressData);
 
-        console.log(newEstablishment)
+        await this.establishmentRequest.delete(establishmentRequest.id);
 
-        await this.establishmentRequest.delete(establishmentRequest.id)
-        return newEstablishment
+        return newEstablishment;
     }
 }
 
-export default new EstablishmentRequestService()
+export default new EstablishmentRequestService();
