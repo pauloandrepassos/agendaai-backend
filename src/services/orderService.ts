@@ -6,21 +6,22 @@ import { Order, OrderStatus } from "../models/Order";
 import { OrderItem } from "../models/OrderItem";
 import { User } from "../models/User";
 import { Establishment } from "../models/Establishment";
+import CustomError from "../utils/CustomError";
 
 class OrderService {
     private orderRepository: Repository<Order>;
     private shoppingBasketRepository: Repository<ShoppingBasket>;
-    private userRepository: Repository<User>
-    private establishmentRepository: Repository<Establishment>
+    private userRepository: Repository<User>;
+    private establishmentRepository: Repository<Establishment>;
 
     constructor() {
         this.orderRepository = AppDataSource.getRepository(Order);
         this.shoppingBasketRepository = AppDataSource.getRepository(ShoppingBasket);
-        this.userRepository = AppDataSource.getRepository(User)
-        this.establishmentRepository = AppDataSource.getRepository(Establishment)
+        this.userRepository = AppDataSource.getRepository(User);
+        this.establishmentRepository = AppDataSource.getRepository(Establishment);
     }
 
-    public async createOrderFromBasket(userId: number,establishmentId: number) {
+    public async createOrderFromBasket(userId: number, establishmentId: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
     
@@ -30,7 +31,7 @@ class OrderService {
                 relations: ["shoppingBasketItems", "shoppingBasketItems.product", "establishment"],
             });
             if (!basket || !basket.shoppingBasketItems.length) {
-                throw new Error("Cesto de compras vazio ou não encontrado.");
+                throw new CustomError("Cesto de compras vazio ou não encontrado.", 400, "BASKET_NOT_FOUND");
             } 
     
             const totalPrice = basket.shoppingBasketItems.reduce(
@@ -38,21 +39,21 @@ class OrderService {
                 0
             );
     
-            const user = await  this.userRepository.findOne({ where: { id: userId } });
+            const user = await this.userRepository.findOne({ where: { id: userId } });
             if (!user) {
-                throw new Error("Usuário não encontrado.");
+                throw new CustomError("Usuário não encontrado.", 404, "USER_NOT_FOUND");
             }
     
             const establishment = await this.establishmentRepository.findOne({
                 where: { id: establishmentId }, 
             });
             if (!establishment) {
-                throw new Error("Estabelecimento não encontrado.");
+                throw new CustomError("Estabelecimento não encontrado.", 404, "ESTABLISHMENT_NOT_FOUND");
             }
     
             const order = this.orderRepository.create({
-                user: {id:user.id},
-                establishment: {id:establishment.id},
+                user: { id: user.id },
+                establishment: { id: establishment.id },
                 total_price: totalPrice,
                 order_date: new Date(),
                 status: OrderStatus.PENDING,
@@ -77,28 +78,38 @@ class OrderService {
             return savedOrder;
         } catch (error) {
             await queryRunner.rollbackTransaction();
-            if (error instanceof Error)
-                throw new Error(`Erro ao criar pedido: ${error.message}`);
+            if (error instanceof CustomError) throw error;
+            throw new CustomError("Erro ao criar pedido.", 500, "ORDER_CREATION_ERROR");
         } finally {
             await queryRunner.release();
         }
     }
 
     public async getOrdersByUserId(userId: number) {
-        return await this.orderRepository.find({
-            where: { user: { id: userId } },
-            relations: ["establishment", "orderItems"],
-        });
+        try {
+            return await this.orderRepository.find({
+                where: { user: { id: userId } },
+                relations: ["establishment", "orderItems"],
+            });
+        } catch (error) {
+            throw new CustomError("Erro ao buscar pedidos do usuário.", 500, "USER_ORDERS_FETCH_ERROR");
+        }
     }
 
     public async getOrderById(orderId: number) {
-        const order = await this.orderRepository.findOne({
-            where: { id: orderId },
-            relations: ["establishment", "user", "orderItems"],
-        });
-        if (!order) throw new Error("Pedido não encontrado.");
-        return order;
+        try {
+            const order = await this.orderRepository.findOne({
+                where: { id: orderId },
+                relations: ["establishment", "user", "orderItems"],
+            });
+            if (!order) throw new CustomError("Pedido não encontrado.", 404, "ORDER_NOT_FOUND");
+            return order;
+        } catch (error) {
+            if (error instanceof CustomError) throw error;
+            throw new CustomError("Erro ao buscar pedido.", 500, "ORDER_FETCH_ERROR");
+        }
     }
+
     public async getOrdersByEstablishmentId(establishmentId: number) {
         try {
             const orders = await this.orderRepository.find({
@@ -107,24 +118,27 @@ class OrderService {
             });
     
             if (!orders.length) {
-                throw new Error("Nenhum pedido encontrado para o estabelecimento informado.");
+                throw new CustomError("Nenhum pedido encontrado para o estabelecimento informado.", 404, "ESTABLISHMENT_ORDERS_NOT_FOUND");
             }
     
             return orders;
         } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Erro ao buscar pedidos do estabelecimento: ${error.message}`);
-            }
-            throw new Error("Erro desconhecido ao buscar pedidos do estabelecimento.");
+            if (error instanceof CustomError) throw error;
+            throw new CustomError("Erro ao buscar pedidos do estabelecimento.", 500, "ESTABLISHMENT_ORDERS_FETCH_ERROR");
         }
     }
     
     public async confirmOrderPickup(orderId: number) {
-        const order = await this.getOrderById(orderId);
-        if (!order) throw new Error("Pedido não encontrado.");
+        try {
+            const order = await this.getOrderById(orderId);
+            if (!order) throw new CustomError("Pedido não encontrado.", 404, "ORDER_NOT_FOUND");
 
-        order.status = OrderStatus.COMPLETED;
-        return await this.orderRepository.save(order);
+            order.status = OrderStatus.COMPLETED;
+            return await this.orderRepository.save(order);
+        } catch (error) {
+            if (error instanceof CustomError) throw error;
+            throw new CustomError("Erro ao confirmar retirada do pedido.", 500, "ORDER_PICKUP_CONFIRMATION_ERROR");
+        }
     }
 }
 
