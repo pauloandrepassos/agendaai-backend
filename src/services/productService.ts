@@ -70,9 +70,6 @@ class ProductService {
             where: { id },
             relations: ["establishment"],
         });
-        if (!product) {
-            throw new CustomError("Produto não encontrado", 404, "PRODUCT_NOT_FOUND");
-        }
         return product;
     }
 }
