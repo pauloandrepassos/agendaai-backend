@@ -167,6 +167,7 @@ class MenuService {
                 image: menuItem.product.image,
                 price: menuItem.product.price,
                 category: menuItem.product.category,
+                description: menuItem.product.description
             })),
         }));
     
