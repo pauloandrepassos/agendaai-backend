@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { sendVerificationEmail, sendPasswordResetEmail } from "../utils/emails";
 import CustomError from "../utils/CustomError";
+import { encrypt } from "../utils/encryption";
 
 class AuthService {
     private userRepository: Repository<User>;
@@ -27,14 +28,13 @@ class AuthService {
 
     public async register(name: string, cpf: string, email: string, password: string, phone: string): Promise<PendingUser | null> {
         try {
+            const { encrypted: encryptedCPF} = encrypt(cpf);
             const hasPendingUser = await this.pendingUserRepository.findOne({ where: { email } });
             if (hasPendingUser) {
                 await this.pendingUserRepository.remove(hasPendingUser);
             }
-
             const emailExists = await this.userRepository.findOne({ where: { email } });
-            const cpfExists = await this.userRepository.findOne({ where: { cpf } });
-
+            const cpfExists = await this.userRepository.findOne({ where: { cpf: encryptedCPF }});
             if (emailExists || cpfExists) {
                 throw new CustomError("Usuário com este email ou CPF já existe.", 409, "USER_ALREADY_EXISTS");
             }
@@ -43,10 +43,11 @@ class AuthService {
 
             const pendingUser = this.pendingUserRepository.create({
                 name,
-                cpf,
+                cpf: encryptedCPF,
                 email,
                 password: hashedPassword,
                 phone,
+
             });
 
             await this.pendingUserRepository.save(pendingUser);

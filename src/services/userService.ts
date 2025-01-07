@@ -2,12 +2,19 @@ import AppDataSource from "../database/config";
 import { User } from "../models/User";
 import { Repository } from "typeorm";
 import CustomError from "../utils/CustomError";
+import { decrypt } from "../utils/encryption";
+
 class UserService {
     private userRepository: Repository<User>;
 
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
     }
+    
+    // Função para descriptografar o CPF
+private decryptCPF(encryptedCPF: string): string {
+    return decrypt(encryptedCPF); // Passando os dois argumentos separados
+}
 
     public async getAllUsers(): Promise<User[]> {
         try {
@@ -21,13 +28,17 @@ class UserService {
             if(error instanceof CustomError) throw error
             throw new CustomError("Erro ao buscar todos os usuários.", 500, "GET_ALL_USERS_ERROR");
         }
-    }
+    } 
 
     public async getUserById(id: number): Promise<User> {
         try {
             const user = await this.userRepository.findOne({ where: { id } });
+             
             if (!user) {
                 throw new CustomError("Usuário não encontrado.", 404, "USER_NOT_FOUND");
+            }
+            if (user.cpf) {
+                user.cpf = decrypt(user.cpf);  // Descriptografando o CPF
             }
             return user;
         } catch (error) {
