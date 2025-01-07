@@ -4,9 +4,9 @@ const key = crypto.randomBytes(32);
 const iv = crypto.randomBytes(16);  
 
 export function encrypt(data: string): { encrypted: string } {
-    const key = process.env.SECRET_KEY; 
+    const key = process.env.CRIPTO_KEY; 
     if (!key) {
-        throw new Error("SECRET_KEY não definido");
+        throw new Error("CRIPTO_KEY não definido");
     }
 
     const cipher = crypto.createCipheriv('aes-256-ecb', Buffer.from(key), null); 
@@ -16,9 +16,9 @@ export function encrypt(data: string): { encrypted: string } {
     return { encrypted }; 
 }
 export function decrypt(encrypted: string): string {
-    const key = process.env.SECRET_KEY; 
+    const key = process.env.CRIPTO_KEY; 
     if (!key) {
-        throw new Error("SECRET_KEY não definido");
+        throw new Error("CRIPTO_KEY não definido");
     }
 
     const decipher = crypto.createDecipheriv('aes-256-ecb', Buffer.from(key), null); 
