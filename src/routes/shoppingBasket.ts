@@ -22,11 +22,13 @@ shoppingBasketRouter.get("/shopping-basket/items", verifyToken("client"), async 
 });
 
 // Rota para adicionar itens ao cesto de compras
-shoppingBasketRouter.post("/shopping-basket/items", async (req: UserRequest, res: Response) => {
+shoppingBasketRouter.post("/shopping-basket/items", verifyToken("client"), async (req: UserRequest, res: Response) => {
     const { establishmentId, productId, quantity, menuId 
 
     } = req.body;
 
+    console.log(req.body);
+    console.log(req.userId);
     try {
         const shoppingBasket = await ShoppingBasketService.addItemToBasket(
             Number(req.userId), 
@@ -86,7 +88,7 @@ shoppingBasketRouter.delete("/shopping-basket/items/:productId/remove", verifyTo
     const { productId } = req.params;
 
     try {
-        const shoppingBasket = await ShoppingBasketService.removeItemCompletelyFromBasket(
+        await ShoppingBasketService.removeItemCompletelyFromBasket(
             Number(req.userId),
             Number(productId)
         );

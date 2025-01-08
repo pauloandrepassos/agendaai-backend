@@ -20,10 +20,15 @@ class ShoppingBasketService {
     public async getShoppingBasketWithItems(userId: number) {
         const shoppingBasket = await this.shoppingBasketRepository.findOne({
             where: { user: userId },
-            relations: ["shoppingBasketItems", "shoppingBasketItems.product", "establishment"],
+            relations: ["shoppingBasketItems", "shoppingBasketItems.product", "establishment", "menu"],
         });
 
         if (!shoppingBasket) throw new CustomError("Carrinho de compras não encontrado", 404, "BASKET_NOT_FOUND");
+
+
+    if (shoppingBasket.menu) {
+        shoppingBasket.menu = { id: shoppingBasket.menu.id, day: shoppingBasket.menu.day } as Menu;
+    }
 
         return shoppingBasket;
     }
@@ -108,6 +113,7 @@ class ShoppingBasketService {
     
         } catch (error) {
             await queryRunner.rollbackTransaction();
+            if(error instanceof CustomError) throw error;
             throw new CustomError("Erro ao adicionar item ao carrinho", 500, "ADD_ITEM_ERROR", error);
         } finally {
             await queryRunner.release();
