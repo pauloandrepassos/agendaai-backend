@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { User } from "./User";
 import { Establishment } from "./Establishment";
 import { ShoppingBasketItem } from "./ShoppingBasketItem";
+import { Menu } from "./Menu";
+
 export interface IShoppingBasket {
     id: number;
     user: number;
@@ -26,6 +28,10 @@ export class ShoppingBasket implements IShoppingBasket {
     @ManyToOne(() => Establishment, (establishment) => establishment.id, { onDelete: "CASCADE", nullable: false })
     @JoinColumn({name:"establishment_id"})
     establishment: number;
+
+    @ManyToOne(() => Menu)
+    @JoinColumn({ name: "menu_id" })
+    menu: Menu;
 
     @OneToMany(() => ShoppingBasketItem, (item) => item.shopping_basket)
     shoppingBasketItems: ShoppingBasketItem[];

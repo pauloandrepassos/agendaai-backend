@@ -22,15 +22,18 @@ shoppingBasketRouter.get("/shopping-basket/items", verifyToken("client"), async 
 });
 
 // Rota para adicionar itens ao cesto de compras
-shoppingBasketRouter.post("/shopping-basket/items", verifyToken("client"), async (req: UserRequest, res: Response) => {
-    const { establishmentId, productId, quantity } = req.body;
+shoppingBasketRouter.post("/shopping-basket/items", async (req: UserRequest, res: Response) => {
+    const { establishmentId, productId, quantity, menuId 
+
+    } = req.body;
 
     try {
         const shoppingBasket = await ShoppingBasketService.addItemToBasket(
             Number(req.userId), 
             Number(establishmentId), 
             Number(productId), 
-            quantity
+            quantity,
+            Number(menuId)
         );
         res.status(201).json(shoppingBasket);
     } catch (error) {

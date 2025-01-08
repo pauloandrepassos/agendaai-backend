@@ -4,14 +4,17 @@ import { ShoppingBasket } from "../models/ShoppingBasket";
 import { ShoppingBasketItem } from "../models/ShoppingBasketItem";
 import productService from "./productService";
 import CustomError from "../utils/CustomError";
+import { Menu } from "../models/Menu";
 
 class ShoppingBasketService {
     private shoppingBasketRepository: Repository<ShoppingBasket>;
     private shoppingBasketItemRepository: Repository<ShoppingBasketItem>;
+    private menuRepository: Repository<Menu>
 
     constructor() {
         this.shoppingBasketRepository = AppDataSource.getRepository(ShoppingBasket);
         this.shoppingBasketItemRepository = AppDataSource.getRepository(ShoppingBasketItem);
+        this.menuRepository = AppDataSource.getRepository(Menu)
     }
 
     public async getShoppingBasketWithItems(userId: number) {
@@ -25,36 +28,65 @@ class ShoppingBasketService {
         return shoppingBasket;
     }
 
-    public async addItemToBasket(userId: number, establishmentId: number, productId: number, quantity: number) {
+    public async addItemToBasket(
+        userId: number,
+        establishmentId: number,
+        productId: number,
+        quantity: number,
+        menuId: number 
+    ) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
-
+    
         try {
+            const product = await productService.getProductById(productId);
+            if (!product) {
+                throw new CustomError("Produto não encontrado", 404, "PRODUCT_NOT_FOUND");
+            }
+    
+            const menu = await this.menuRepository.findOne({ where: { id: menuId }, relations: ['menuItems'] });
+    
+            if (!menu) {
+                throw new CustomError("Cardápio não encontrado", 404, "MENU_NOT_FOUND");
+            }
+    
+            const menuDay = menu.day;  
+    
             let shoppingBasket = await this.shoppingBasketRepository.findOne({
                 where: { user: userId, establishment: establishmentId },
-                relations: ["shoppingBasketItems", "shoppingBasketItems.product"],
+                relations: ["menu", "shoppingBasketItems", "shoppingBasketItems.product"],
             });
-
+    
             if (!shoppingBasket) {
+                console.log('Cesto não encontrado, criando um novo.');
                 shoppingBasket = this.shoppingBasketRepository.create({
                     user: userId,
                     establishment: establishmentId,
+                    menu: { id: menuId, day: menuDay },  
                     total_price: 0,
-                    shoppingBasketItems: []
+                    shoppingBasketItems: [],
                 });
                 shoppingBasket = await queryRunner.manager.save(shoppingBasket);
+            } else if (shoppingBasket.menu.id !== menuId) {
+                throw new CustomError("O cesto já está vinculado a outro cardápio", 400, "DIFFERENT_MENU");
             }
 
-            const product = await productService.getProductById(productId);
-            if (!product) throw new CustomError("Produto não encontrado", 404, "PRODUCT_NOT_FOUND");
-
+            const menuItem = menu.menuItems.find((item) => item.product_id === productId);
+            if (!menuItem) {
+                throw new CustomError("Produto não pertence a este cardápio", 400, "INVALID_MENU_ITEM");
+            }
+    
+            if (shoppingBasket.menu.day !== menuDay) {
+                throw new CustomError("O produto não pertence ao cardápio do dia correto", 400, "INVALID_DAY");
+            }
+    
             const existingItem = shoppingBasket.shoppingBasketItems.find(
                 (item) => item.product.id === productId
             );
-
             if (existingItem) {
                 existingItem.quantity += quantity;
                 await queryRunner.manager.save(existingItem);
+                console.log('Item atualizado:', existingItem);
             } else {
                 const newItem = this.shoppingBasketItemRepository.create({
                     shopping_basket: shoppingBasket,
@@ -64,15 +96,16 @@ class ShoppingBasketService {
                 await queryRunner.manager.save(newItem);
                 shoppingBasket.shoppingBasketItems.push(newItem);
             }
-
+    
             shoppingBasket.total_price = shoppingBasket.shoppingBasketItems.reduce(
-                (total, item) => total + item.product.price * item.quantity, 0
+                (total, item) => total + item.product.price * item.quantity,
+                0
             );
-
+    
             await queryRunner.manager.save(shoppingBasket);
             await queryRunner.commitTransaction();
             return shoppingBasket;
-
+    
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw new CustomError("Erro ao adicionar item ao carrinho", 500, "ADD_ITEM_ERROR", error);
@@ -80,7 +113,6 @@ class ShoppingBasketService {
             await queryRunner.release();
         }
     }
-
     public async removeItemFromBasket(userId: number, itemId: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
