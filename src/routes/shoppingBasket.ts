@@ -64,7 +64,7 @@ shoppingBasketRouter.delete("/shopping-basket/items/:id", verifyToken("client"),
 });
 
 // Rota para remover o cesto de compras e seus itens
-shoppingBasketRouter.delete("/shopping-basket/:id", verifyToken("client"), async (req: UserRequest, res: Response) => {
+shoppingBasketRouter.delete("/shopping-basket", verifyToken("client"), async (req: UserRequest, res: Response) => {
     try {
         await ShoppingBasketService.removeBasket(Number(req.userId));
         res.status(204).send();
