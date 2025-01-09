@@ -50,15 +50,9 @@ orderRoute.get("/order/:orderId", verifyToken("vendor"), async (req: Request, re
 });
 
 // Rota para obter todos os pedidos de um estabelecimento
-orderRoute.get("/orders/establishment/:id", verifyToken("vendor"), async (req: Request, res: Response) => {
+orderRoute.get("/orders/establishment", verifyToken("vendor"), async (req: UserRequest, res: Response) => {
     try {
-        const establishmentId = Number(req.params.id);
-
-        if (!establishmentId || isNaN(establishmentId)) {
-            throw new CustomError("ID do estabelecimento inválido.", 400,"INVALID MERCHANT ID.");
-        }
-
-        const orders = await OrderService.getOrdersByEstablishmentId(establishmentId);
+        const orders = await OrderService.getOrdersByVendorId(Number(req.userId));
         res.status(200).json(orders);
     } catch (error) {
         if (error instanceof CustomError) {

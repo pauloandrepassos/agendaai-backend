@@ -7,6 +7,7 @@ import { OrderItem } from "../models/OrderItem";
 import { User } from "../models/User";
 import { Establishment } from "../models/Establishment";
 import CustomError from "../utils/CustomError";
+import establishmentService from "./establishmentService";
 
 class OrderService {
     private orderRepository: Repository<Order>;
@@ -92,6 +93,7 @@ class OrderService {
                 relations: ["establishment", "orderItems"],
             });
         } catch (error) {
+            if (error instanceof CustomError) throw error;
             throw new CustomError("Erro ao buscar pedidos do usuário.", 500, "USER_ORDERS_FETCH_ERROR");
         }
     }
@@ -107,6 +109,26 @@ class OrderService {
         } catch (error) {
             if (error instanceof CustomError) throw error;
             throw new CustomError("Erro ao buscar pedido.", 500, "ORDER_FETCH_ERROR");
+        }
+    }
+
+    public async getOrdersByVendorId(vendorId: number) {
+        try {
+            const establishment = await establishmentService.getEstablishmentByVendorId(vendorId);
+            const orders = await this.orderRepository.find({
+                where: { establishment: { id: establishment.id } },
+                relations: ["user", "orderItems", "orderItems.product"],
+            })
+    
+            if (!orders.length) {
+                throw new CustomError("Nenhum pedido encontrado para o estabelecimento informado.", 404, "ESTABLISHMENT_ORDERS_NOT_FOUND");
+            }
+    
+            return orders;
+        } catch (error) {
+            if (error instanceof CustomError) throw error;
+            throw new CustomError("Erro ao buscar pedido.", 500, "ORDER_FETCH_ERROR");
+            
         }
     }
 

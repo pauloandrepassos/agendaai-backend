@@ -27,7 +27,7 @@ shoppingBasketRouter.post("/shopping-basket/items", verifyToken("client"), async
 
     } = req.body;
 
-    console.log(req.body);
+    console.log(`body ${req.body}`);
     console.log(req.userId);
     try {
         const shoppingBasket = await ShoppingBasketService.addItemToBasket(
