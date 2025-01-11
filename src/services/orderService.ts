@@ -22,7 +22,7 @@ class OrderService {
         this.establishmentRepository = AppDataSource.getRepository(Establishment);
     }
 
-    public async createOrderFromBasket(userId: number, establishmentId: number) {
+    public async createOrderFromBasket(userId: number, establishmentId: number, pickupTime: string) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
     
@@ -51,13 +51,17 @@ class OrderService {
             if (!establishment) {
                 throw new CustomError("Estabelecimento não encontrado.", 404, "ESTABLISHMENT_NOT_FOUND");
             }
+
+            console.log("basket.order_date", basket.order_date);
+            console.log("----------------------------------------------------------------------------------------------------------------------------------------");
     
             const order = this.orderRepository.create({
                 user: { id: user.id },
                 establishment: { id: establishment.id },
                 total_price: totalPrice,
-                order_date: new Date(),
+                order_date: basket.order_date,
                 status: OrderStatus.PENDING,
+                pickup_time: pickupTime,
             });
     
             const savedOrder = await queryRunner.manager.save(order);

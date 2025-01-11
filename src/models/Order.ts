@@ -12,6 +12,7 @@ export enum OrderStatus {
 interface IOrder {
     id: number;
     order_date: Date;
+    pickup_time: string
     status: OrderStatus;
     user: User;
     total_price: number;
@@ -25,8 +26,11 @@ export class Order implements IOrder {
     @PrimaryGeneratedColumn("increment")
     id: number;
 
-    @CreateDateColumn()
+    @Column()
     order_date: Date;
+
+    @Column({ type: "time", nullable: false })
+    pickup_time: string;
 
     @Column({
         type: "enum",

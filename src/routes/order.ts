@@ -9,7 +9,13 @@ const orderRoute = Router();
 // Rota para criar um pedido a partir do cesto de compras
 orderRoute.post("/shopping-basket/confirm", verifyToken("client"), async (req: UserRequest, res: Response) => {
     try {
-        const order = await OrderService.createOrderFromBasket(Number(req.userId), Number(req.body.idEstablishment));
+        const { idEstablishment, pickupTime } = req.body;
+
+        if(!pickupTime) {
+            throw new CustomError("Horário de retirada não informado.", 400, "MISSING_PICKUP_TIME");
+        }
+
+        const order = await OrderService.createOrderFromBasket(Number(req.userId), Number(idEstablishment), pickupTime);
         res.status(201).json(order);
     } catch (error) {
         if (error instanceof CustomError) {
