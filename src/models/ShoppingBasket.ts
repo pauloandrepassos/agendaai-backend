@@ -9,6 +9,7 @@ export interface IShoppingBasket {
     user: number;
     establishment: number;
     total_price: number;
+    order_date: Date;
     created_at: Date;
     updated_at: Date;
 }
@@ -35,6 +36,10 @@ export class ShoppingBasket implements IShoppingBasket {
 
     @OneToMany(() => ShoppingBasketItem, (item) => item.shopping_basket)
     shoppingBasketItems: ShoppingBasketItem[];
+
+    @Column()
+    order_date: Date;
+    
     @CreateDateColumn()
     created_at: Date;
 

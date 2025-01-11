@@ -38,7 +38,8 @@ class ShoppingBasketService {
         establishmentId: number,
         productId: number,
         quantity: number,
-        menuId: number 
+        menuId: number,
+        orderDate?: string
     ) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
@@ -70,6 +71,7 @@ class ShoppingBasketService {
                     menu: { id: menuId, day: menuDay },  
                     total_price: 0,
                     shoppingBasketItems: [],
+                    order_date: orderDate ? new Date(orderDate) : new Date(),
                 });
                 shoppingBasket = await queryRunner.manager.save(shoppingBasket);
             } else if (shoppingBasket.menu.id !== menuId) {
