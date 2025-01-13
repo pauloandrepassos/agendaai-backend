@@ -75,7 +75,7 @@ class ShoppingBasketService {
                 });
                 shoppingBasket = await queryRunner.manager.save(shoppingBasket);
             } else if (shoppingBasket.menu.id !== menuId) {
-                throw new CustomError("O cesto já está vinculado a outro cardápio", 400, "DIFFERENT_MENU");
+                throw new CustomError("Você só pode adicionar itens de um cardápio por vez", 400, "DIFFERENT_MENU");
             }
 
             const menuItem = menu.menuItems.find((item) => item.product_id === productId);
