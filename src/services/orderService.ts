@@ -94,7 +94,7 @@ class OrderService {
         try {
             return await this.orderRepository.find({
                 where: { user: { id: userId } },
-                relations: ["establishment", "orderItems"],
+                relations: ["establishment", "orderItems", "orderItems.product"],
             });
         } catch (error) {
             if (error instanceof CustomError) throw error;
