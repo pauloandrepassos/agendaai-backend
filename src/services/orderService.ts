@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { Between, FindOptionsWhere, Repository } from "typeorm";
 import AppDataSource from "../database/config";
 import { ShoppingBasket } from "../models/ShoppingBasket";
 import { ShoppingBasketItem } from "../models/ShoppingBasketItem";
@@ -25,7 +25,7 @@ class OrderService {
     public async createOrderFromBasket(userId: number, establishmentId: number, pickupTime: string) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
-    
+
         try {
             const basket = await this.shoppingBasketRepository.findOne({
                 where: { user: userId },
@@ -33,20 +33,20 @@ class OrderService {
             });
             if (!basket || !basket.shoppingBasketItems.length) {
                 throw new CustomError("Cesto de compras vazio ou não encontrado.", 400, "BASKET_NOT_FOUND");
-            } 
-    
+            }
+
             const totalPrice = basket.shoppingBasketItems.reduce(
                 (total, item) => total + item.product.price * item.quantity,
                 0
             );
-    
+
             const user = await this.userRepository.findOne({ where: { id: userId } });
             if (!user) {
                 throw new CustomError("Usuário não encontrado.", 404, "USER_NOT_FOUND");
             }
-    
+
             const establishment = await this.establishmentRepository.findOne({
-                where: { id: establishmentId }, 
+                where: { id: establishmentId },
             });
             if (!establishment) {
                 throw new CustomError("Estabelecimento não encontrado.", 404, "ESTABLISHMENT_NOT_FOUND");
@@ -54,7 +54,7 @@ class OrderService {
 
             console.log("basket.order_date", basket.order_date);
             console.log("----------------------------------------------------------------------------------------------------------------------------------------");
-    
+
             const order = this.orderRepository.create({
                 user: { id: user.id },
                 establishment: { id: establishment.id },
@@ -63,9 +63,9 @@ class OrderService {
                 status: OrderStatus.PENDING,
                 pickup_time: pickupTime,
             });
-    
+
             const savedOrder = await queryRunner.manager.save(order);
-    
+
             for (const item of basket.shoppingBasketItems) {
                 const orderItem = queryRunner.manager.create(OrderItem, {
                     order: savedOrder,
@@ -75,10 +75,10 @@ class OrderService {
                 });
                 await queryRunner.manager.save(orderItem);
             }
-    
+
             await queryRunner.manager.delete(ShoppingBasketItem, { shopping_basket: { id: basket.id } });
             await queryRunner.manager.delete(ShoppingBasket, { id: basket.id });
-    
+
             await queryRunner.commitTransaction();
             return savedOrder;
         } catch (error) {
@@ -116,23 +116,31 @@ class OrderService {
         }
     }
 
-    public async getOrdersByVendorId(vendorId: number) {
+    public async getOrdersByVendorId(vendorId: number, date: string) {
         try {
             const establishment = await establishmentService.getEstablishmentByVendorId(vendorId);
-            const orders = await this.orderRepository.find({
-                where: { establishment: { id: establishment.id } },
-                relations: ["user", "orderItems", "orderItems.product"],
-            })
-    
-            if (!orders.length) {
-                throw new CustomError("Nenhum pedido encontrado para o estabelecimento informado.", 404, "ESTABLISHMENT_ORDERS_NOT_FOUND");
+
+            const whereCondition: FindOptionsWhere<Order> = { establishment: { id: establishment.id } };
+            if (date) {
+                const startOfDay = new Date(`${date}T00:00:00`);
+                const endOfDay = new Date(`${date}T23:59:59.999`);
+
+                console.log("startOfDay", startOfDay);
+                console.log("endOfDay", endOfDay);
+
+                whereCondition.order_date = Between(startOfDay, endOfDay);
             }
-    
+
+            const orders = await this.orderRepository.find({
+                where: whereCondition,
+                relations: ["user", "orderItems", "orderItems.product"],
+            });
+
             return orders;
         } catch (error) {
             if (error instanceof CustomError) throw error;
             throw new CustomError("Erro ao buscar pedido.", 500, "ORDER_FETCH_ERROR");
-            
+
         }
     }
 
@@ -142,18 +150,18 @@ class OrderService {
                 where: { establishment: { id: establishmentId } },
                 relations: ["user", "orderItems", "orderItems.product"],
             });
-    
+
             if (!orders.length) {
                 throw new CustomError("Nenhum pedido encontrado para o estabelecimento informado.", 404, "ESTABLISHMENT_ORDERS_NOT_FOUND");
             }
-    
+
             return orders;
         } catch (error) {
             if (error instanceof CustomError) throw error;
             throw new CustomError("Erro ao buscar pedidos do estabelecimento.", 500, "ESTABLISHMENT_ORDERS_FETCH_ERROR");
         }
     }
-    
+
     public async confirmOrderPickup(orderId: number) {
         try {
             const order = await this.getOrderById(orderId);
