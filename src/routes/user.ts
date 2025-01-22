@@ -23,9 +23,10 @@ userRouter.get("/users", async (req, res) => {
     }
 })
 
-userRouter.get("/user", verifyToken(), async (req: UserRequest, res) => { //busca usuário pelo id do token
+userRouter.get("/user-by-token", verifyToken(), async (req: UserRequest, res) => { //busca usuário pelo id do token
     try {
         const userId = req.userId
+        console.log(`user id: ${userId}`)
         const user = await UserService.getUserById(Number(userId))
         res.status(200).json(user)
     } catch (error) {

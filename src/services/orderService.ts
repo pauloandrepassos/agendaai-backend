@@ -106,7 +106,7 @@ class OrderService {
         try {
             const order = await this.orderRepository.findOne({
                 where: { id: orderId },
-                relations: ["establishment", "user", "orderItems"],
+                relations: ["establishment", "user", "orderItems", "orderItems.product"],
             });
             if (!order) throw new CustomError("Pedido não encontrado.", 404, "ORDER_NOT_FOUND");
             return order;
