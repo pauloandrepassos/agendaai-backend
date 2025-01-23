@@ -10,11 +10,11 @@ class UserService {
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
     }
-    
+
     // Função para descriptografar o CPF
-private decryptCPF(encryptedCPF: string): string {
-    return decrypt(encryptedCPF); // Passando os dois argumentos separados
-}
+    private decryptCPF(encryptedCPF: string): string {
+        return decrypt(encryptedCPF); // Passando os dois argumentos separados
+    }
 
     public async getAllUsers(): Promise<User[]> {
         try {
@@ -25,15 +25,15 @@ private decryptCPF(encryptedCPF: string): string {
             return users;
         } catch (error) {
             console.error("Erro ao buscar todos os usuários:", error);
-            if(error instanceof CustomError) throw error
+            if (error instanceof CustomError) throw error
             throw new CustomError("Erro ao buscar todos os usuários.", 500, "GET_ALL_USERS_ERROR");
         }
-    } 
+    }
 
     public async getUserById(id: number): Promise<User> {
         try {
             const user = await this.userRepository.findOne({ where: { id } });
-             
+
             if (!user) {
                 throw new CustomError("Usuário não encontrado.", 404, "USER_NOT_FOUND");
             }
@@ -43,7 +43,7 @@ private decryptCPF(encryptedCPF: string): string {
             return user;
         } catch (error) {
             console.error("Erro ao buscar usuário por ID:", error);
-            if(error instanceof CustomError) throw error
+            if (error instanceof CustomError) throw error
             throw new CustomError("Erro ao buscar usuário por ID.", 500, "GET_USER_BY_ID_ERROR");
         }
     }
@@ -56,33 +56,43 @@ private decryptCPF(encryptedCPF: string): string {
             }
             return user;
         } catch (error) {
-            if(error instanceof CustomError) throw error
+            if (error instanceof CustomError) throw error
             throw new CustomError("Erro ao buscar usuário por email.", 500, "GET_USER_BY_EMAIL_ERROR");
         }
     }
 
-    public async updateUser(id: number, updatedData: Partial<User>): Promise<User> {
+    public async updateUser(id: number, updatedData: { name?: string; phone?: string }): Promise<User> {
         try {
-            const user = await this.getUserById(id);
-            Object.assign(user, updatedData);
+            const user = await this.userRepository.findOne({ where: { id } });
+            if (!user) {
+                throw new CustomError("Usuário não encontrado.", 404, "USER_NOT_FOUND");
+            }
+
+            if (updatedData.name) user.name = updatedData.name;
+            if (updatedData.phone) user.phone = updatedData.phone;
+
             const updatedUser = await this.userRepository.save(user);
+
             return updatedUser;
         } catch (error) {
             console.error("Erro ao atualizar usuário:", error);
-            if(error instanceof CustomError) throw error
             throw new CustomError("Erro ao atualizar usuário.", 500, "UPDATE_USER_ERROR");
         }
     }
 
+
     public async updateUserImage(id: number, image: string): Promise<User> {
         try {
-            const user = await this.getUserById(id);
+            const user = await this.userRepository.findOne({ where: { id } });
+            if (!user) {
+                throw new CustomError("Usuário não encontrado.", 404, "USER_NOT_FOUND");
+            }
             user.image = image;
             const updatedUser = await this.userRepository.save(user);
             return updatedUser;
         } catch (error) {
             console.error("Erro ao atualizar imagem do usuário:", error);
-            if(error instanceof CustomError) throw error
+            if (error instanceof CustomError) throw error
             throw new CustomError("Erro ao atualizar imagem do usuário.", 500, "UPDATE_USER_IMAGE_ERROR");
         }
     }

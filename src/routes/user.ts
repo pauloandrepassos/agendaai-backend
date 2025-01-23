@@ -2,7 +2,7 @@ import { UserRequest } from "../types/request"
 import verifyToken from "../middlewares/authorization"
 import UserService from "../services/userService"
 import { Router } from "express"
-import { Request, Response } from 'express'
+import { Response } from 'express'
 import { validateRegister } from "../validators/validadeFields"
 import multer from "multer"
 import path from "path"
@@ -84,13 +84,11 @@ userRouter.put("/user/update-image", verifyToken(), upload.single('image'), asyn
     }
 })
 
-userRouter.put("/user/:id", validateRegister, async (req: Request, res: Response) => {
+userRouter.put("/user/update", verifyToken(), validateRegister, async (req: UserRequest, res: Response) => {
     try {
-        const allowedFields = ['name', 'phone'];
-        const updatedData = Object.fromEntries(
-            Object.entries(req.body).filter(([key]) => allowedFields.includes(key))
-        )
-        const updatedUser = await UserService.updateUser(Number(req.params.id), updatedData)
+        const id = req.userId
+        const { name, phone } = req.body
+        const updatedUser = await UserService.updateUser(Number(id), { name, phone })
         res.status(200).json(updatedUser)
     } catch (error) {
         console.error(error)
