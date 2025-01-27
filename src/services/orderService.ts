@@ -174,6 +174,35 @@ class OrderService {
             throw new CustomError("Erro ao confirmar retirada do pedido.", 500, "ORDER_PICKUP_CONFIRMATION_ERROR");
         }
     }
+
+    public async getOrderDatesByEstablishmentId(vendorId: number) {
+        try {
+            const establishment = await this.establishmentRepository.findOne({
+                where: { vendor: { id: vendorId } },
+                relations: ['address'],
+            });
+            const establishmentId = await establishment?.id
+            const orders = await this.orderRepository
+                .createQueryBuilder("order")
+                .select("DISTINCT DATE(order.order_date)", "order_date")
+                .where("order.establishment_id = :establishmentId", { establishmentId })
+                .getRawMany();
+            
+                const formattedDates = orders.map(order => {
+                    const date = new Date(order.order_date);
+                    return date.toISOString().split("T")[0]; // Extrai apenas a parte da data
+                });
+        
+                console.log(`Total de pedidos: ${orders.length}`);
+                console.log(`Datas formatadas: ${formattedDates}`);
+        
+                return formattedDates;
+        } catch (error) {
+            if (error instanceof CustomError) throw error;
+            throw new CustomError("Erro ao buscar datas dos pedidos.", 500, "ORDER_DATES_FETCH_ERROR");
+        }
+    }
+
 }
 
 export default new OrderService();

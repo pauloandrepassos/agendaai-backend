@@ -85,4 +85,18 @@ orderRoute.patch("/order/:orderId/confirm-pickup", verifyToken("vendor"), async 
     }
 });
 
+// Rota para obter as datas com pedidos de um estabelecimento
+orderRoute.get("/orders/establishment/dates", verifyToken("vendor"), async (req: UserRequest, res: Response) => {
+    try {
+        const dates = await OrderService.getOrderDatesByEstablishmentId(Number(req.userId));
+        res.status(200).json(dates);
+    } catch (error) {
+        if (error instanceof CustomError) {
+            res.status(error.statusCode).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: "Erro interno do servidor." });
+        }
+    }
+});
+
 export default orderRoute;
