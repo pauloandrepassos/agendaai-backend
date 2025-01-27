@@ -59,7 +59,7 @@ orderRoute.get("/order/:orderId", verifyToken("vendor"), async (req: Request, re
 orderRoute.get("/orders/establishment", verifyToken("vendor"), async (req: UserRequest, res: Response) => {
     try {
         const { date } = req.query;
-        const orders = await OrderService.getOrdersByVendorId(Number(req.userId), String(date));
+        const orders = await OrderService.getOrdersByVendorId(Number(req.userId), date ? String(date) : undefined);
         res.status(200).json(orders);
     } catch (error) {
         if (error instanceof CustomError) {

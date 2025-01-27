@@ -116,7 +116,7 @@ class OrderService {
         }
     }
 
-    public async getOrdersByVendorId(vendorId: number, date: string) {
+    public async getOrdersByVendorId(vendorId: number, date?: string) {
         try {
             const establishment = await establishmentService.getEstablishmentByVendorId(vendorId);
 
