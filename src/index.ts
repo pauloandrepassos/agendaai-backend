@@ -9,7 +9,12 @@ const app = express()
 
 app.use(express.json())
 
-app.use(cors());
+const corsOptions = {
+    origin: ['https://agendaai.vercel.app', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  };
+  
+  app.use(cors(corsOptions));
 
 app.use(timezoneMiddleware)
 
