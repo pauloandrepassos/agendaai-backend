@@ -2,6 +2,8 @@ import { validateOperatingHours } from "../validators/validateOperatingHours";
 import operatingHoursService from "../services/operatingHoursService";
 import { Router } from "express";
 import { Request, Response } from 'express'
+import { UserRequest } from "../types/request";
+import verifyToken from "../middlewares/authorization";
 
 const router = Router()
 
@@ -25,6 +27,14 @@ router.post("/operating-hours", validateOperatingHours, async (req: Request, res
                 message: "Erro desconhecido ao adicionar horário",
             })
         }
+    }
+})
+router.get("/operating-hours", verifyToken("vendor"), async (req: UserRequest, res: Response) => {
+    try {
+        const operatingHours = await operatingHoursService.getByVendorId(Number(req.userId))
+        res.status(200).json(operatingHours)
+    } catch (error) {
+        res.status(500).json({error})
     }
 })
 router.get("/operating-hours/establishment/:id", async (req: Request, res: Response) => {

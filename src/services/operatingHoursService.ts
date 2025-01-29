@@ -1,6 +1,7 @@
 import AppDataSource from "../database/config"
 import { Day, OperatingHours } from "../models/OperatingHours"
 import { Repository } from "typeorm"
+import establishmentService from "./establishmentService"
 
 class OperatingHoursService {
     private operatingHoursRepository: Repository<OperatingHours>
@@ -27,6 +28,14 @@ class OperatingHoursService {
             where: { id },
             relations: ["establishment"],
         });
+    }
+
+    public async getByVendorId(id: number): Promise<OperatingHours[] | null> {
+        const establishment = await establishmentService.getEstablishmentByVendorId(id)
+        const operatingHours = await this.operatingHoursRepository.find({
+            where: { establishment_id: establishment.id }
+        });
+        return operatingHours
     }
 
     public async getByEstablishmentId(establishmentId: number): Promise<OperatingHours[]> {
