@@ -28,7 +28,7 @@ class OrderService {
 
         try {
             const basket = await this.shoppingBasketRepository.findOne({
-                where: { user: userId },
+                where: { user_id: userId },
                 relations: ["shoppingBasketItems", "shoppingBasketItems.product", "establishment"],
             });
             if (!basket || !basket.shoppingBasketItems.length) {

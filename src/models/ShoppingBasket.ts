@@ -6,7 +6,8 @@ import { Menu } from "./Menu";
 
 export interface IShoppingBasket {
     id: number;
-    user: number;
+    user: User;
+    user_id: number;
     establishment: number;
     total_price: number;
     order_date: Date;
@@ -24,8 +25,11 @@ export class ShoppingBasket implements IShoppingBasket {
 
     @ManyToOne(() => User, (user) => user.id, { onDelete: "CASCADE", nullable: false })
     @JoinColumn({ name: "user_id" })
-    user: number;
+    user: User;
 
+    @Column()
+    user_id: number;
+    
     @ManyToOne(() => Establishment, (establishment) => establishment.id, { onDelete: "CASCADE", nullable: false })
     @JoinColumn({name:"establishment_id"})
     establishment: number;

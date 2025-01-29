@@ -19,7 +19,7 @@ class ShoppingBasketService {
 
     public async getShoppingBasketWithItems(userId: number) {
         const shoppingBasket = await this.shoppingBasketRepository.findOne({
-            where: { user: userId },
+            where: { user_id: userId },
             relations: ["shoppingBasketItems", "shoppingBasketItems.product", "establishment", "menu"],
             order: {
                 shoppingBasketItems: { created_at: "DESC" }
@@ -38,7 +38,7 @@ class ShoppingBasketService {
 
     public async getShoppingBasketItemCount(userId: number): Promise<number> {
         const shoppingBasket = await this.shoppingBasketRepository.findOne({
-            where: { user: userId },
+            where: { user_id: userId },
             relations: ["shoppingBasketItems"],
         });
     
@@ -78,14 +78,15 @@ class ShoppingBasketService {
             const menuDay = menu.day;  
     
             let shoppingBasket = await this.shoppingBasketRepository.findOne({
-                where: { user: userId, establishment: establishmentId },
+                where: { user_id: userId},
                 relations: ["menu", "shoppingBasketItems", "shoppingBasketItems.product"],
             });
     
+            console.log("carrinho",shoppingBasket)
             if (!shoppingBasket) {
                 console.log('Cesto não encontrado, criando um novo.');
                 shoppingBasket = this.shoppingBasketRepository.create({
-                    user: userId,
+                    user_id: userId,
                     establishment: establishmentId,
                     menu: { id: menuId, day: menuDay },  
                     total_price: 0,
@@ -146,7 +147,7 @@ class ShoppingBasketService {
 
         try {
             const shoppingBasket = await this.shoppingBasketRepository.findOne({
-                where: { user: userId },
+                where: { user_id: userId },
                 relations: ["shoppingBasketItems", "shoppingBasketItems.product"],
             });
 
@@ -184,6 +185,7 @@ class ShoppingBasketService {
 
         } catch (error) {
             await queryRunner.rollbackTransaction();
+            if (error instanceof CustomError) throw error
             throw new CustomError("Erro ao remover item do carrinho", 500, "REMOVE_ITEM_ERROR", error);
         } finally {
             await queryRunner.release();
@@ -196,7 +198,7 @@ class ShoppingBasketService {
 
         try {
             const shoppingBasket = await this.shoppingBasketRepository.findOne({
-                where: { user: userId },
+                where: { user_id: userId },
                 relations: ["shoppingBasketItems"],
             });
 
@@ -210,6 +212,8 @@ class ShoppingBasketService {
 
         } catch (error) {
             await queryRunner.rollbackTransaction();
+            if (error instanceof CustomError) throw error
+            if (error instanceof CustomError) throw error
             throw new CustomError("Erro ao remover carrinho de compras", 500, "REMOVE_BASKET_ERROR", error);
         } finally {
             await queryRunner.release();
@@ -222,7 +226,7 @@ class ShoppingBasketService {
 
         try {
             const shoppingBasket = await this.shoppingBasketRepository.findOne({
-                where: { user: userId },
+                where: { user_id: userId },
                 relations: ["shoppingBasketItems", "shoppingBasketItems.product"],
             });
 
@@ -253,6 +257,7 @@ class ShoppingBasketService {
 
         } catch (error) {
             await queryRunner.rollbackTransaction();
+            if (error instanceof CustomError) throw error
             throw new CustomError("Erro ao remover item do carrinho", 500, "REMOVE_ITEM_ERROR", error);
         } finally {
             await queryRunner.release();
