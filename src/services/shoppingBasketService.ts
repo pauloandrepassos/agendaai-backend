@@ -33,6 +33,22 @@ class ShoppingBasketService {
         return shoppingBasket;
     }
 
+    public async getShoppingBasketItemCount(userId: number): Promise<number> {
+        const shoppingBasket = await this.shoppingBasketRepository.findOne({
+            where: { user: userId },
+            relations: ["shoppingBasketItems"],
+        });
+    
+        if (!shoppingBasket || !shoppingBasket.shoppingBasketItems.length) {
+            return 0;
+        }
+    
+        // Calcula a quantidade total de itens no cesto, considerando a quantidade de cada item
+        const totalQuantity = shoppingBasket.shoppingBasketItems.reduce((sum, item) => sum + item.quantity, 0);
+    
+        return totalQuantity;
+    }    
+
     public async addItemToBasket(
         userId: number,
         establishmentId: number,

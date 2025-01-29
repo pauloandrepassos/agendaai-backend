@@ -21,6 +21,20 @@ shoppingBasketRouter.get("/shopping-basket/items", verifyToken("client"), async 
     }
 });
 
+shoppingBasketRouter.get("/shopping-basket/count", verifyToken("client"), async (req: UserRequest, res: Response) => {
+    try {
+        const itemCount = await ShoppingBasketService.getShoppingBasketItemCount(Number(req.userId));
+        res.status(200).json({ itemCount });
+    } catch (error) {
+        if (error instanceof CustomError) {
+            res.status(error.statusCode).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: "Erro interno do servidor." });
+        }
+    }
+});
+
+
 // Rota para adicionar itens ao cesto de compras
 shoppingBasketRouter.post("/shopping-basket/items", verifyToken("client"), async (req: UserRequest, res: Response) => {
     const { establishmentId, productId, quantity, menuId, orderDate} = req.body;
