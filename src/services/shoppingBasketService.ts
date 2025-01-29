@@ -21,6 +21,9 @@ class ShoppingBasketService {
         const shoppingBasket = await this.shoppingBasketRepository.findOne({
             where: { user: userId },
             relations: ["shoppingBasketItems", "shoppingBasketItems.product", "establishment", "menu"],
+            order: {
+                shoppingBasketItems: { created_at: "DESC" }
+            }
         });
 
         if (!shoppingBasket) throw new CustomError("Carrinho de compras não encontrado", 404, "BASKET_NOT_FOUND");

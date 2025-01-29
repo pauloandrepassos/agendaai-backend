@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { ShoppingBasket } from "./ShoppingBasket";
 import { Product } from "./Product";
 
@@ -24,4 +24,10 @@ export class ShoppingBasketItem implements IShoppingBasketItem {
 
     @Column("int")
     quantity: number;
+
+    @CreateDateColumn()
+    created_at: Date
+
+    @UpdateDateColumn()
+    updated_at: Date
 }
