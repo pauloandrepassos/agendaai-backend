@@ -1,83 +1,34 @@
-import { validateOperatingHours } from "../validators/validateOperatingHours";
-import operatingHoursService from "../services/operatingHoursService";
-import { Router } from "express";
-import { Request, Response } from 'express'
 import { UserRequest } from "../types/request";
 import verifyToken from "../middlewares/authorization";
+import operatingHoursService from "../services/operatingHoursService";
+import { Router } from "express";
 
 const router = Router()
 
-router.post("/operating-hours", validateOperatingHours, async (req: Request, res: Response) => {
+router.get("/operating-hours/establishment/:id", verifyToken(""), async (req, res) => {
     try {
-        const data = req.body
-        const newOperatingHours = await operatingHoursService.create(data)
-        res.status(201).json(newOperatingHours)
+        const { id } = req.params;
+        const hours = await operatingHoursService.getByEstablishment(Number(id));
+        res.json(hours);
     } catch (error) {
-        if (typeof error === "object" && error !== null && "details" in error && "message" in error) {
-            res.status(409).json({
-                message: error.message,
-                conflicts: error.details,
-            })
-        } else if (error instanceof Error) {
-            res.status(500).json({
-                message: error.message,
-            })
-        } else {
-            res.status(500).json({
-                message: "Erro desconhecido ao adicionar horário",
-            })
-        }
+        console.error("Erro ao buscar horários:", error);
+        res.status(500).json({ message: "Erro ao buscar horários", error });
     }
-})
-router.get("/operating-hours", verifyToken("vendor"), async (req: UserRequest, res: Response) => {
-    try {
-        const operatingHours = await operatingHoursService.getByVendorId(Number(req.userId))
-        res.status(200).json(operatingHours)
-    } catch (error) {
-        res.status(500).json({error})
-    }
-})
-router.get("/operating-hours/establishment/:id", async (req: Request, res: Response) => {
-    try {
-        const establishmentId = parseInt(req.params.id, 10)
-        const operatingHours = await operatingHoursService.getByEstablishmentId(establishmentId)
-        res.status(200).json(operatingHours)
-    } catch (error) {
-        res.status(500).json({error})
-    }
-})
+});
 
-router.put("/operating-hours/:id", validateOperatingHours, async (req: Request, res: Response) => {
+router.post("/operating-hours", verifyToken("vendor"), async (req: UserRequest, res) => {
     try {
-        const id = parseInt(req.params.id, 10)
-        const data = req.body
-        const updatedOperatingHour = await operatingHoursService.update(id, data)
-        res.status(200).json(updatedOperatingHour)
-    } catch (error) {
-        if (typeof error === "object" && error !== null && "details" in error && "message" in error) {
-            res.status(409).json({
-                message: error.message,
-                conflicts: error.details,
-            })
-        } else if (error instanceof Error) {
-            res.status(500).json({
-                message: error.message,
-            })
-        } else {
-            res.status(500).json({
-                message: "Erro desconhecido ao adicionar horário",
-            })
+        const { establishment_id, hours } = req.body;
+        if (!establishment_id || !hours) {
+            res.status(400).json({ message: "Dados inválidos" });
+            return
         }
-    }
-})
-
-router.delete("/operating-hours/:id", async (req: Request, res: Response) => {
-    try {
-        const id = parseInt(req.params.id, 10)
-        await operatingHoursService.delete(id)
-        res.status(204).send()
+        console.log(`horariosssssssssss: ${hours}`)
+        const savedHours = await operatingHoursService.saveOperatingHours(establishment_id, hours);
+        res.status(201).json(savedHours);
     } catch (error) {
-        res.status(500).json({message: "erro ao excluir horário", error})
+        console.error("Erro ao salvar horários:", error);
+        res.status(500).json({ message: "Erro ao salvar horários", error });
     }
 });
 
