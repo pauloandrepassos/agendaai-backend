@@ -4,6 +4,15 @@ import operatingHoursService from "../services/operatingHoursService";
 import { Router } from "express";
 
 const router = Router()
+router.get("/operating-hours/establishment", verifyToken("vendor"), async (req: UserRequest, res) => {
+    try {
+        const hours = await operatingHoursService.getByVendorId(Number(req.userId));
+        res.json(hours);
+    } catch (error) {
+        console.error("Erro ao buscar horários:", error);
+        res.status(500).json({ message: "Erro ao buscar horários", error });
+    }
+});
 
 router.get("/operating-hours/establishment/:id", verifyToken(""), async (req, res) => {
     try {
