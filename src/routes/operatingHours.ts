@@ -27,13 +27,13 @@ router.get("/operating-hours/establishment/:id", verifyToken(""), async (req, re
 
 router.post("/operating-hours", verifyToken("vendor"), async (req: UserRequest, res) => {
     try {
-        const { establishment_id, hours } = req.body;
-        if (!establishment_id || !hours) {
+        const { hours } = req.body;
+        if (!hours) {
             res.status(400).json({ message: "Dados inválidos" });
             return
         }
         console.log(`horariosssssssssss: ${hours}`)
-        const savedHours = await operatingHoursService.saveOperatingHours(establishment_id, hours);
+        const savedHours = await operatingHoursService.saveOperatingHours(Number(req.userId), hours);
         res.status(201).json(savedHours);
     } catch (error) {
         console.error("Erro ao salvar horários:", error);

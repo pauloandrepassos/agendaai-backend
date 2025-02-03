@@ -19,9 +19,10 @@ class OperatingHoursService {
         return this.operatingHoursRepository.find({ where: { establishment_id: (await establishment).id } });
     }
 
-    async saveOperatingHours(establishment_id: number, hours: Partial<OperatingHours>[]) {
-        await this.operatingHoursRepository.delete({ establishment_id });
-        const newHours = hours.map(hour => ({ ...hour, establishment_id }));
+    async saveOperatingHours(vendor_id: number, hours: Partial<OperatingHours>[]) {
+        const establishment = await establishmentService.getEstablishmentByVendorId(vendor_id)
+        await this.operatingHoursRepository.delete({ establishment_id: establishment.id });
+        const newHours = hours.map(hour => ({ ...hour, establishment_id: establishment.id }));
         return this.operatingHoursRepository.save(newHours);
     }
 }
