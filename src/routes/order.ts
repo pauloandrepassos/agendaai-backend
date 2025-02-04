@@ -3,6 +3,7 @@ import OrderService from "../services/orderService";
 import verifyToken from "../middlewares/authorization";
 import { UserRequest } from "../types/request";
 import CustomError from "../utils/CustomError";
+import orderService from "../services/orderService";
 
 const orderRoute = Router();
 
@@ -98,5 +99,15 @@ orderRoute.get("/orders/establishment/dates", verifyToken("vendor"), async (req:
         }
     }
 });
+
+orderRoute.get("/orders/count", async (req, res) => {
+    try {
+        const count = await orderService.getOrdersCount();
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erro ao contar usuários", error });
+    }
+})
 
 export default orderRoute;

@@ -203,6 +203,16 @@ class OrderService {
         }
     }
 
+    public async getOrdersCount(): Promise<number> {
+        try {
+            const count = await this.orderRepository.count();
+            return count;
+        } catch (error) {
+            console.error("Erro ao contar pedidos:", error);
+            throw new CustomError("Erro ao contar pedidos.", 500, "COUNT_USERS_ERROR");
+        }
+    }
+
 }
 
 export default new OrderService();
