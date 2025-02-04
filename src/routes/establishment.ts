@@ -5,6 +5,7 @@ import verifyToken from "../middlewares/authorization";
 import EstablishmentService from "../services/establishmentService";
 import { validateEstablishmentRequest } from "../validators/validateEstablishmentRequest ";
 import CustomError from "../utils/CustomError";
+import establishmentService from "../services/establishmentService";
 
 const establishmentRouter = Router();
 
@@ -56,6 +57,16 @@ establishmentRouter.get("/establishments/by-vendor", verifyToken('vendor'), asyn
     }
 });
 
+establishmentRouter.get("/establishments/count", async (req, res) => {
+    try {
+        const count = await establishmentService.getEstablishmentCount();
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erro ao contar usuários", error });
+    }
+})
+
 establishmentRouter.get("/establishments/:id", verifyToken(), async (req: Request, res: Response) => {
     try {
         const establishment = await EstablishmentService.getEstablishmentById(Number(req.params.id));
@@ -69,6 +80,8 @@ establishmentRouter.get("/establishments/:id", verifyToken(), async (req: Reques
         res.status(404).json({ message: "Estabelecimento não encontrado", error });
     }
 });
+
+
 
 establishmentRouter.put("/establishments/:id", verifyToken('vendor'), validateEstablishmentRequest, async (req: Request, res: Response) => {
     try {

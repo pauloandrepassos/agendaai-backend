@@ -129,6 +129,16 @@ class EstablishmentService {
             throw new CustomError("Erro ao deletar estabelecimento.", 500, "DELETE_ESTABLISHMENT_ERROR");
         }
     }
+
+    public async getEstablishmentCount(): Promise<number> {
+        try {
+            const count = await this.establishmentRepository.count();
+            return count;
+        } catch (error) {
+            console.error("Erro ao contar estabelecimntos:", error);
+            throw new CustomError("Erro ao contar estabelecimntos.", 500, "COUNT_USERS_ERROR");
+        }
+    }
 }
 
 export default new EstablishmentService();
