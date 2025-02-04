@@ -96,6 +96,16 @@ class UserService {
             throw new CustomError("Erro ao atualizar imagem do usuário.", 500, "UPDATE_USER_IMAGE_ERROR");
         }
     }
+
+    public async getUsersCount(): Promise<number> {
+        try {
+            const count = await this.userRepository.count();
+            return count;
+        } catch (error) {
+            console.error("Erro ao contar usuários:", error);
+            throw new CustomError("Erro ao contar usuários.", 500, "COUNT_USERS_ERROR");
+        }
+    }
 }
 
 export default new UserService();

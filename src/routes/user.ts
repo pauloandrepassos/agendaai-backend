@@ -45,6 +45,16 @@ userRouter.get("/user/:id", async (req, res) => { //busca usuário pelo id forne
     }
 })
 
+userRouter.get("/users/count", async (req, res) => {
+    try {
+        const count = await UserService.getUsersCount();
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erro ao contar usuários", error });
+    }
+})
+
 userRouter.put("/user/update-image", verifyToken(), upload.single('image'), async (req: UserRequest, res: Response) => {
     console.log("chegou na rota")
     try {
