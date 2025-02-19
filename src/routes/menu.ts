@@ -8,7 +8,8 @@ const menuRouter = Router();
 // Endpoint para adicionar itens ao cardápio
 menuRouter.post("/menu/add-items", verifyToken(""), async (req: UserRequest, res: Response) => {
     try {
-        const { itemIds, day } = req.body;
+        const { items, day } = req.body;
+        console.log(req.body);
         const vendorId = req.userId;
 
         if (!day) {
@@ -16,7 +17,7 @@ menuRouter.post("/menu/add-items", verifyToken(""), async (req: UserRequest, res
             return;
         }
 
-        const updatedMenu = await menuService.addMenuItem(Number(vendorId), day, itemIds);
+        const updatedMenu = await menuService.addMenuItem(Number(vendorId), day, items);
 
         res.status(200).json({
             message: "Itens adicionados ao cardápio com sucesso.",

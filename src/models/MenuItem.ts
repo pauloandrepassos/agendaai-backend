@@ -7,6 +7,7 @@ export interface IMenuItem {
     id: number;
     menu_id: number;
     product_id: number;
+    max_quantity: number;
     created_at: Date;
     updated_at: Date;
 }
@@ -21,6 +22,9 @@ export class MenuItem implements IMenuItem {
 
     @Column()
     product_id: number;
+
+    @Column({ nullable: true })
+    max_quantity: number;
 
     @ManyToOne(() => Menu, (menu) => menu.id, {
         onDelete: "CASCADE",

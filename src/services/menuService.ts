@@ -1,4 +1,4 @@
-import { In, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import AppDataSource from "../database/config";
 import { Menu } from "../models/Menu";
 import { MenuItem } from "../models/MenuItem";
@@ -15,7 +15,7 @@ class MenuService {
         this.menuItemRepository = AppDataSource.getRepository(MenuItem);
     }
 
-    public async addMenuItem(userId: number, day: Day, itemIds: number[]) {
+    public async addMenuItem(userId: number, day: Day, items: { id: number; maxQuantity?: number }[]) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
     
@@ -39,42 +39,28 @@ class MenuService {
                 menu = await queryRunner.manager.save(menu);
             }
     
-            // Produtos válidos recebidos na requisição
+            // Remove todos os itens do menu antes de adicionar os novos
+            await queryRunner.manager.delete(MenuItem, { menu_id: menu.id });
+    
+            // Obtém os produtos válidos da requisição
             const validProducts = (
                 await Promise.all(
-                    itemIds.map(async (itemId) => {
-                        const product = await productService.verifyProductById(itemId);
-                        if (product) return product;
-                        console.log(`Produto com ID ${itemId} não encontrado. Ignorando.`);
+                    items.map(async (item) => {
+                        const product = await productService.verifyProductById(item.id);
+                        if (product) return { ...product, maxQuantity: item.maxQuantity };
+                        console.log(`Produto com ID ${item.id} não encontrado. Ignorando.`);
                         return null;
                     })
                 )
             ).filter((product) => product !== null);
     
-            // IDs dos produtos válidos
-            const validProductIds = validProducts.map((product) => product.id);
-    
-            // IDs dos itens atualmente no menu
-            const existingMenuItemIds = (menu.menuItems || []).map((menuItem) => menuItem.product_id);
-    
-            // Determina os itens a adicionar e a remover
-            const itemsToAdd = validProductIds.filter((id) => !existingMenuItemIds.includes(id));
-            const itemsToRemove = existingMenuItemIds.filter((id) => !validProductIds.includes(id));
-    
-            // Remove itens que não estão na lista recebida
-            if (itemsToRemove.length > 0) {
-                await queryRunner.manager.delete(MenuItem, {
-                    menu_id: menu.id,
-                    product_id: In(itemsToRemove),
-                });
-            }
-    
-            // Adiciona novos itens
-            if (itemsToAdd.length > 0) {
-                const menuItems = itemsToAdd.map((productId) =>
+            // Adiciona os novos produtos ao menu
+            if (validProducts.length > 0) {
+                const menuItems = validProducts.map((product) =>
                     this.menuItemRepository.create({
                         menu_id: menu.id,
-                        product_id: productId,
+                        product_id: product.id,
+                        max_quantity: product.maxQuantity || undefined,
                     })
                 );
                 await queryRunner.manager.save(menuItems);
@@ -95,7 +81,7 @@ class MenuService {
         } finally {
             await queryRunner.release();
         }
-    }    
+    }
 
     public async removeMenuItemByVendor(vendorId: number, itemId: number): Promise<boolean> {
         const queryRunner = AppDataSource.createQueryRunner();
@@ -167,7 +153,8 @@ class MenuService {
                 image: menuItem.product.image,
                 price: menuItem.product.price,
                 category: menuItem.product.category,
-                description: menuItem.product.description
+                description: menuItem.product.description,
+                max_quantity: menuItem.max_quantity
             })),
         }));
     
