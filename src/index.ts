@@ -12,7 +12,7 @@ app.use(express.json());
 const corsOptions = {
     origin: ['https://agendaai.vercel.app', 'http://localhost:3000', 'https://agendeaii.com.br'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'token'],
     credentials: true,
 };
 
