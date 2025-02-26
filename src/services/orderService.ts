@@ -23,9 +23,15 @@ class OrderService {
     }
 
     public async createOrderFromBasket(userId: number, establishmentId: number, pickupTime: string) {
+        // Verifica se o usuário tem um pedido pendente
+        const hasPendingOrder = await this.hasPendingOrder(userId);
+        if (hasPendingOrder) {
+            throw new CustomError("Você já possui um pedido em andamento. Você só poderá adicionar um novo pedido, após a finalização do pedido atual.", 400, "PENDING_ORDER_EXISTS");
+        }
+    
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.startTransaction();
-
+    
         try {
             const basket = await this.shoppingBasketRepository.findOne({
                 where: { user_id: userId },
@@ -34,27 +40,24 @@ class OrderService {
             if (!basket || !basket.shoppingBasketItems.length) {
                 throw new CustomError("Cesto de compras vazio ou não encontrado.", 400, "BASKET_NOT_FOUND");
             }
-
+    
             const totalPrice = basket.shoppingBasketItems.reduce(
                 (total, item) => total + item.product.price * item.quantity,
                 0
             );
-
+    
             const user = await this.userRepository.findOne({ where: { id: userId } });
             if (!user) {
                 throw new CustomError("Usuário não encontrado.", 404, "USER_NOT_FOUND");
             }
-
+    
             const establishment = await this.establishmentRepository.findOne({
                 where: { id: establishmentId },
             });
             if (!establishment) {
                 throw new CustomError("Estabelecimento não encontrado.", 404, "ESTABLISHMENT_NOT_FOUND");
             }
-
-            console.log("basket.order_date", basket.order_date);
-            console.log("----------------------------------------------------------------------------------------------------------------------------------------");
-
+    
             const order = this.orderRepository.create({
                 user: { id: user.id },
                 establishment: { id: establishment.id },
@@ -63,9 +66,9 @@ class OrderService {
                 status: OrderStatus.PENDING,
                 pickup_time: pickupTime,
             });
-
+    
             const savedOrder = await queryRunner.manager.save(order);
-
+    
             for (const item of basket.shoppingBasketItems) {
                 const orderItem = queryRunner.manager.create(OrderItem, {
                     order: savedOrder,
@@ -75,10 +78,10 @@ class OrderService {
                 });
                 await queryRunner.manager.save(orderItem);
             }
-
+    
             await queryRunner.manager.delete(ShoppingBasketItem, { shopping_basket: { id: basket.id } });
             await queryRunner.manager.delete(ShoppingBasket, { id: basket.id });
-
+    
             await queryRunner.commitTransaction();
             return savedOrder;
         } catch (error) {
@@ -187,16 +190,16 @@ class OrderService {
                 .select("DISTINCT DATE(order.order_date)", "order_date")
                 .where("order.establishment_id = :establishmentId", { establishmentId })
                 .getRawMany();
-            
-                const formattedDates = orders.map(order => {
-                    const date = new Date(order.order_date);
-                    return date.toISOString().split("T")[0]; // Extrai apenas a parte da data
-                });
-        
-                console.log(`Total de pedidos: ${orders.length}`);
-                console.log(`Datas formatadas: ${formattedDates}`);
-        
-                return formattedDates;
+
+            const formattedDates = orders.map(order => {
+                const date = new Date(order.order_date);
+                return date.toISOString().split("T")[0]; // Extrai apenas a parte da data
+            });
+
+            console.log(`Total de pedidos: ${orders.length}`);
+            console.log(`Datas formatadas: ${formattedDates}`);
+
+            return formattedDates;
         } catch (error) {
             if (error instanceof CustomError) throw error;
             throw new CustomError("Erro ao buscar datas dos pedidos.", 500, "ORDER_DATES_FETCH_ERROR");
@@ -211,6 +214,17 @@ class OrderService {
             console.error("Erro ao contar pedidos:", error);
             throw new CustomError("Erro ao contar pedidos.", 500, "COUNT_USERS_ERROR");
         }
+    }
+
+    public async hasPendingOrder(userId: number): Promise<boolean> {
+        const pendingOrder = await this.orderRepository.findOne({
+            where: {
+                user: { id: userId },
+                status: OrderStatus.PENDING,
+            },
+        });
+
+        return !!pendingOrder;
     }
 
 }
