@@ -26,7 +26,7 @@ async function sendVerificationEmail(email: string, token: string): Promise<void
     const verificationUrl = `${siteUrl}/auth/verify?token=${token}&email=${email}`;
 
     const emailContent = `
-        <h1>Bem-vindo ao Agenda Aí!</h1>
+        <h1>Bem-vindo ao Agende Aí!</h1>
         <p>Para concluir seu cadastro, clique no botão abaixo para verificar seu email.</p>
         <a href="${verificationUrl}" class="btn">Verificar Email</a>
         <p>Ou copie e cole este link no navegador:</p>
@@ -34,7 +34,7 @@ async function sendVerificationEmail(email: string, token: string): Promise<void
     `
 
     const mailOptions: SendMailOptions = {
-        from: `Agenda Aí <${process.env.EMAIL}>`,
+        from: `Agende Aí <${process.env.EMAIL}>`,
         to: email,
         subject: 'Verificação de Email',
         html: generateEmailHtml(emailContent)
@@ -62,7 +62,7 @@ async function sendPasswordResetEmail(email: string, resetToken: string): Promis
     `
 
     const mailOptions: SendMailOptions = {
-        from: `Agenda Aí <${process.env.EMAIL}>`,
+        from: `Agende Aí <${process.env.EMAIL}>`,
         to: email,
         subject: 'Recuperação de Senha',
         html: generateEmailHtml(emailContent)
@@ -90,7 +90,7 @@ async function sendRegistrationCompletionEmail(email: string, token: string): Pr
     `
 
     const mailOptions: SendMailOptions = {
-        from: `Agenda Aí <${process.env.EMAIL}>`,
+        from: `Agende Aí <${process.env.EMAIL}>`,
         to: email,
         subject: 'Finalizae cadastro',
         html: generateEmailHtml(emailContent)
