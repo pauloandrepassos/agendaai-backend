@@ -14,7 +14,7 @@ router.get("/operating-hours/establishment", verifyToken("vendor"), async (req: 
     }
 });
 
-router.get("/operating-hours/establishment/:id", verifyToken(""), async (req, res) => {
+router.get("/operating-hours/establishment/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const hours = await operatingHoursService.getByEstablishment(Number(id));

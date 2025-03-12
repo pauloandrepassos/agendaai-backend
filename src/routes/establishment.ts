@@ -67,7 +67,7 @@ establishmentRouter.get("/establishments/count", async (req, res) => {
     }
 })
 
-establishmentRouter.get("/establishments/:id", verifyToken(), async (req: Request, res: Response) => {
+establishmentRouter.get("/establishments/:id", async (req: Request, res: Response) => {
     try {
         const establishment = await EstablishmentService.getEstablishmentById(Number(req.params.id));
         res.status(200).json(establishment);

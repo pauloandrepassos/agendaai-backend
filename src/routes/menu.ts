@@ -49,7 +49,7 @@ menuRouter.delete("/menu/establishments/:itemId", verifyToken(""), async (req: U
 });
 
 // Endpoint para listar o cardápio com os itens relacionados usando id do estabelecimento
-menuRouter.get("/menu/establishment/:id", verifyToken(""), async (req: Request, res: Response) => {
+menuRouter.get("/menu/establishment/:id", async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
 
