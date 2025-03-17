@@ -6,6 +6,7 @@ import { Order, OrderStatus } from "../models/Order";
 import { OrderItem } from "../models/OrderItem";
 import { User } from "../models/User";
 import { Establishment } from "../models/Establishment";
+import { MenuItem } from "../models/MenuItem";
 import CustomError from "../utils/CustomError";
 import establishmentService from "./establishmentService";
 
@@ -14,19 +15,19 @@ class OrderService {
     private shoppingBasketRepository: Repository<ShoppingBasket>;
     private userRepository: Repository<User>;
     private establishmentRepository: Repository<Establishment>;
+    private menuItemRepository: Repository<MenuItem>;
 
     constructor() {
         this.orderRepository = AppDataSource.getRepository(Order);
         this.shoppingBasketRepository = AppDataSource.getRepository(ShoppingBasket);
         this.userRepository = AppDataSource.getRepository(User);
         this.establishmentRepository = AppDataSource.getRepository(Establishment);
+        this.menuItemRepository = AppDataSource.getRepository(MenuItem);
     }
-
     public async createOrderFromBasket(userId: number, establishmentId: number, pickupTime: string) {
-        // Verifica se o usuário tem um pedido pendente
         const hasPendingOrder = await this.hasPendingOrder(userId);
         if (hasPendingOrder) {
-            throw new CustomError("Você já possui um pedido em andamento. Você só poderá adicionar um novo pedido, após a finalização do pedido atual.", 400, "PENDING_ORDER_EXISTS");
+            throw new CustomError("Você já possui um pedido em andamento. Finalize-o antes de criar um novo.", 400, "PENDING_ORDER_EXISTS");
         }
     
         const queryRunner = AppDataSource.createQueryRunner();
@@ -37,8 +38,45 @@ class OrderService {
                 where: { user_id: userId },
                 relations: ["shoppingBasketItems", "shoppingBasketItems.product", "establishment"],
             });
+    
             if (!basket || !basket.shoppingBasketItems.length) {
                 throw new CustomError("Cesto de compras vazio ou não encontrado.", 400, "BASKET_NOT_FOUND");
+            }
+    
+            const exceededProducts: string[] = [];
+    
+            for (const item of basket.shoppingBasketItems) {
+                const menuItem = await this.menuItemRepository.findOne({
+                    where: { product_id: item.product.id }
+                });
+    
+                if (menuItem?.max_quantity) {
+                    const totalOrdered = await this.orderRepository
+                        .createQueryBuilder("order")
+                        .innerJoin("order.orderItems", "orderItem")
+                        .where("orderItem.product_id = :productId", { productId: item.product.id })
+                        .andWhere("order.status IN (:...statuses)", { statuses: [OrderStatus.PENDING, OrderStatus.COMPLETED] })
+                        .select("COALESCE(SUM(orderItem.quantity), 0)", "total")
+                        .getRawOne();
+    
+                    const orderedQuantity = parseInt(totalOrdered?.total || "0", 10);
+    
+                    console.log(`Produto: ${item.product.name}, Máximo: ${menuItem.max_quantity}, Já reservado: ${orderedQuantity}, Novo pedido: ${item.quantity}`);
+    
+                    if (orderedQuantity >= menuItem.max_quantity) {
+                        exceededProducts.push(`${item.product.name} (limite: ${menuItem.max_quantity}, já reservado: ${orderedQuantity})`);
+                    } else if (orderedQuantity + item.quantity > menuItem.max_quantity) {
+                        exceededProducts.push(`${item.product.name} (limite: ${menuItem.max_quantity}, já reservado: ${orderedQuantity}, tentando adicionar: ${item.quantity})`);
+                    }
+                }
+            }
+    
+            if (exceededProducts.length > 0) {
+                throw new CustomError(
+                    `Os seguintes produtos excederam a quantidade máxima: ${exceededProducts.join(", ")}`,
+                    400,
+                    "MAX_QUANTITY_EXCEEDED"
+                );
             }
     
             const totalPrice = basket.shoppingBasketItems.reduce(
@@ -92,6 +130,7 @@ class OrderService {
             await queryRunner.release();
         }
     }
+    
 
     public async getOrdersByUserId(userId: number) {
         try {
@@ -193,7 +232,7 @@ class OrderService {
 
             const formattedDates = orders.map(order => {
                 const date = new Date(order.order_date);
-                return date.toISOString().split("T")[0]; // Extrai apenas a parte da data
+                return date.toISOString().split("T")[0]; 
             });
 
             console.log(`Total de pedidos: ${orders.length}`);
@@ -227,6 +266,7 @@ class OrderService {
         return !!pendingOrder;
     }
 
+  
 }
 
 export default new OrderService();
