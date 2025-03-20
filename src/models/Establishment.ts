@@ -5,6 +5,7 @@ import { Address } from "./Address"
 interface IEstablishment {
     id: number
     name: string
+    description: string
     logo: string
     background_image: string
     cnpj: string
@@ -19,6 +20,9 @@ export class Establishment implements IEstablishment {
 
     @Column()
     name: string
+
+    @Column({ default: null})
+    description: string;
 
     @Column({ nullable: true })
     logo: string
