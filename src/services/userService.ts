@@ -37,9 +37,6 @@ class UserService {
             if (!user) {
                 throw new CustomError("Usuário não encontrado.", 404, "USER_NOT_FOUND");
             }
-            if (user.cpf) {
-                user.cpf = decrypt(user.cpf);  // Descriptografando o CPF
-            }
             return user;
         } catch (error) {
             console.error("Erro ao buscar usuário por ID:", error);

@@ -3,7 +3,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
 interface IPendingUser {
     id: number
     name: string
-    cpf: string
     email: string
     password: string
     phone: string
@@ -16,9 +15,6 @@ export class PendingUser implements IPendingUser {
 
     @Column()
     name: string
-    
-    @Column({unique: true})
-    cpf: string
     
     @Column({unique: true})
     email: string

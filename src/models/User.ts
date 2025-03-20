@@ -9,7 +9,6 @@ export enum UserType {
 interface IUser {
     id: number
     name: string
-    cpf: string
     email: string
     password: string
     phone: string
@@ -24,9 +23,6 @@ export class User implements IUser {
 
     @Column()
     name: string
-    
-    @Column({unique: true})
-    cpf: string
     
     @Column({unique: true})
     email: string

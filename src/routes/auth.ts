@@ -7,9 +7,9 @@ import CustomError from "../utils/CustomError";
 const authRouter = Router();
 
 authRouter.post("/register", validateRegister, async (req: Request, res: Response) => {
-    const { name, cpf, email, password, phone } = req.body;
+    const { name, email, password, phone } = req.body;
     try {
-        const pendingUser = await AuthService.register(name, cpf, email, password, phone);
+        const pendingUser = await AuthService.register(name, email, password, phone);
         res.status(201).json({
             message: "Usuário registrado",
             user: pendingUser,
