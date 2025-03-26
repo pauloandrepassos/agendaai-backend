@@ -227,6 +227,87 @@ class OrderService {
         return !!pendingOrder;
     }
 
+    public async cancelOrder(userId: number, orderId: number) {
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.startTransaction();
+    
+        try {
+            const order = await this.orderRepository.findOne({
+                where: { id: orderId, user: { id: userId } },
+                relations: ["establishment"]
+            });
+    
+            if (!order) {
+                throw new CustomError("Pedido não encontrado ou não pertence ao usuário.", 404, "ORDER_NOT_FOUND");
+            }
+    
+            if (order.status !== OrderStatus.PENDING) {
+                throw new CustomError("Só é possível cancelar pedidos com status 'pending'.", 400, "INVALID_ORDER_STATUS");
+            }
+    
+            // Verifica o prazo de cancelamento
+            const canCancel = this.checkCancellationDeadline(order);
+            if (!canCancel) {
+                throw new CustomError("O prazo para cancelamento deste pedido já expirou.", 400, "CANCELLATION_DEADLINE_EXPIRED");
+            }
+    
+            // Atualiza o status do pedido
+            order.status = OrderStatus.CANCELED;
+            const updatedOrder = await queryRunner.manager.save(order);
+    
+            await queryRunner.commitTransaction();
+            return updatedOrder;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            if (error instanceof CustomError) throw error;
+            throw new CustomError("Erro ao cancelar pedido.", 500, "ORDER_CANCELLATION_ERROR");
+        } finally {
+            await queryRunner.release();
+        }
+    }
+    
+    private checkCancellationDeadline(order: Order): boolean {
+        // Obtém o horário limite de cancelamento do estabelecimento
+        const cancellationDeadline = order.establishment.cancellation_deadline_time;
+        
+        // Se não houver horário definido, permite cancelamento a qualquer momento
+        if (!cancellationDeadline || cancellationDeadline === "00:00:00") {
+            return true;
+        }
+    
+        // Converte o horário limite para partes (horas, minutos, segundos)
+        const [deadlineHours, deadlineMinutes, deadlineSeconds] = cancellationDeadline.split(':').map(Number);
+        
+        // Obtém a data atual
+        const now = new Date();
+        const currentHours = now.getHours();
+        const currentMinutes = now.getMinutes();
+        const currentSeconds = now.getSeconds();
+        
+        // Obtém a data do pedido
+        const orderDate = new Date(order.order_date);
+        const isSameDay = orderDate.getDate() === now.getDate() && 
+                         orderDate.getMonth() === now.getMonth() && 
+                         orderDate.getFullYear() === now.getFullYear();
+        
+        // Se for o mesmo dia, verifica o horário
+        if (isSameDay) {
+            // Compara o horário atual com o horário limite
+            if (currentHours > deadlineHours) {
+                return false;
+            } else if (currentHours === deadlineHours) {
+                if (currentMinutes > deadlineMinutes) {
+                    return false;
+                } else if (currentMinutes === deadlineMinutes) {
+                    return currentSeconds <= deadlineSeconds;
+                }
+            }
+        }
+        
+        // Se não for o mesmo dia ou se estiver dentro do horário, permite cancelamento
+        return true;
+    }
+
 }
 
 export default new OrderService();

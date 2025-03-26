@@ -87,6 +87,21 @@ orderRoute.patch("/order/:orderId/confirm-pickup", verifyToken("vendor"), async 
     }
 });
 
+// Rota para cancelar um pedido
+orderRoute.patch("/order/:orderId/cancel", verifyToken("client"), async (req: UserRequest, res: Response) => {
+    try {
+        const { orderId } = req.params;
+        const updatedOrder = await OrderService.cancelOrder(Number(req.userId), Number(orderId));
+        res.status(200).json(updatedOrder);
+    } catch (error) {
+        if (error instanceof CustomError) {
+            res.status(error.statusCode).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: "Erro interno do servidor." });
+        }
+    }
+});
+
 // Rota para obter as datas com pedidos de um estabelecimento
 orderRoute.get("/orders/establishment/dates", verifyToken("vendor"), async (req: UserRequest, res: Response) => {
     try {

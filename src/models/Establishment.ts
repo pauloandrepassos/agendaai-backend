@@ -11,6 +11,8 @@ interface IEstablishment {
     cnpj: string
     vendor_id: number
     address_id: number
+    order_deadline_time: string;
+    cancellation_deadline_time: string;
 }
 
 @Entity('Establishment')
@@ -50,6 +52,11 @@ export class Establishment implements IEstablishment {
     @JoinColumn({ name: 'address_id'})
     address: Address
 
+    @Column({ type: "time", nullable: false, default: "00:00:00" })
+    order_deadline_time: string
+
+    @Column({ type: "time", nullable: false, default: "00:00:00" })
+    cancellation_deadline_time: string
     
     @CreateDateColumn()
     created_at: Date
