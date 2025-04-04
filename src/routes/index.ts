@@ -8,10 +8,11 @@ import shoppingBasketRouter from "./shoppingBasket";
 import productRouter from "./product";
 import menuRouter from "./menu";
 import orderRoute from "./order";
+import notificationRouter from "./notification";
 
 const router = Router()
 
 router.use('/', userRouter, authRouter, establishmentRequestRouter, establishmentRouter
-,operatingHoursRouter, productRouter, menuRouter,shoppingBasketRouter,orderRoute)
+,operatingHoursRouter, productRouter, menuRouter,shoppingBasketRouter,orderRoute, notificationRouter)
 
 export default router

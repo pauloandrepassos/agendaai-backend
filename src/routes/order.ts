@@ -42,7 +42,7 @@ orderRoute.get("/orders/user", verifyToken("client"), async (req: UserRequest, r
 });
 
 // Rota para obter detalhes de um pedido específico
-orderRoute.get("/order/:orderId", verifyToken("vendor"), async (req: Request, res: Response) => {
+orderRoute.get("/order/:orderId", async (req: Request, res: Response) => {
     try {
         const { orderId } = req.params;
         const order = await OrderService.getOrderById(Number(orderId));

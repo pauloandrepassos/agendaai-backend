@@ -8,6 +8,7 @@ import { User } from "../models/User";
 import { Establishment } from "../models/Establishment";
 import CustomError from "../utils/CustomError";
 import establishmentService from "./establishmentService";
+import notificationService from "./notificationService";
 
 class OrderService {
     private orderRepository: Repository<Order>;
@@ -83,6 +84,9 @@ class OrderService {
             await queryRunner.manager.delete(ShoppingBasket, { id: basket.id });
     
             await queryRunner.commitTransaction();
+
+            await notificationService.sendNewOrderNotification(savedOrder.id);
+
             return savedOrder;
         } catch (error) {
             await queryRunner.rollbackTransaction();
@@ -171,7 +175,12 @@ class OrderService {
             if (!order) throw new CustomError("Pedido não encontrado.", 404, "ORDER_NOT_FOUND");
 
             order.status = OrderStatus.COMPLETED;
-            return await this.orderRepository.save(order);
+            const updatedOrder = await this.orderRepository.save(order);
+            
+            // Envia notificação para o cliente
+            await notificationService.sendOrderPickedUpNotification(updatedOrder);
+
+            return updatedOrder;
         } catch (error) {
             if (error instanceof CustomError) throw error;
             throw new CustomError("Erro ao confirmar retirada do pedido.", 500, "ORDER_PICKUP_CONFIRMATION_ERROR");
